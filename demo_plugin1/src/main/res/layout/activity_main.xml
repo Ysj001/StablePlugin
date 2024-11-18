@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/cardview_dark_background"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    tools:context=".Demo1MainActivity">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:text="我是plugin1"
+        android:textColor="@color/purple_200" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="40dp"
+        android:gravity="center"
+        android:text="本组件主要演示对四大组件的支持"
+        android:textColor="@color/teal_200" />
+
+    <Button
+        android:id="@+id/btnToActivity1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="to activity1" />
+
+    <Button
+        android:id="@+id/btnTestDemo1Provider"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Test Demo1Provider" />
+
+    <Button
+        android:id="@+id/btnTestDemo1Service"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Test Demo1Service" />
+
+    <Button
+        android:id="@+id/btnTestDemo1Receiver"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Test Demo1Receiver" />
+
+</LinearLayout>

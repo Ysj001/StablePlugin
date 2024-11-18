@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:name=".MainApplication"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:largeHeap="true"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:supportsRtl="true"
+        android:theme="@style/Plugin1AppTheme">
+        <activity
+            android:name=".Demo1MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".Activity1"
+            android:exported="false"
+            android:launchMode="singleTop" />
+
+        <provider
+            android:name=".Demo1Provider"
+            android:authorities="${applicationId}.demo1.provider"
+            android:exported="false" />
+
+        <service
+            android:name=".Demo1Service"
+            android:exported="false" />
+
+        <receiver
+            android:name=".Demo1Receiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="demo1.receiver.action1" />
+            </intent-filter>
+        </receiver>
+
+    </application>
+
+</manifest>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application
+        android:appComponentFactory="com.ysj.lib.android.stable.plugin.PluginComponentFactory"
+        tools:ignore="UnusedAttribute"
+        tools:replace="android:appComponentFactory">
+
+        <!-- 作为 launchMode=standard 时的坑位 -->
+        <!--suppress AndroidDomInspection -->
+        <activity
+            android:name="com.ysj.lib.android.stable.plugin.StandardActivity"
+            android:exported="true"
+            android:launchMode="standard"
+            tools:ignore="MissingClass" />
+        <provider
+            android:name=".component.provider.PluginProvider"
+            android:authorities="${applicationId}.stable.plugin.provider"
+            android:exported="false" />
+    </application>
+
+</manifest>

@@ -15,6 +15,14 @@ import androidx.appcompat.app.AppCompatActivity
  */
 abstract class PluginAppCompatActivity : AppCompatActivity() {
 
+    @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+    override fun getLastNonConfigurationInstance(): Any? {
+        // plugin 更新后 classloader 会变更，这里需要判断
+        return super.getLastNonConfigurationInstance().takeIf {
+            it is NonConfigurationInstances
+        }
+    }
+
     override fun attachBaseContext(newBase: Context) {
         val context = when (newBase) {
             is PluginActivityContext -> newBase

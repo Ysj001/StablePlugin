@@ -31,7 +31,24 @@ internal class PluginClassLoader(
         private const val TAG = "PluginClassLoader"
     }
 
+    fun loadClassFromHost(name: String?): Class<*> {
+        log("loadClassFromHost: $name")
+        return super.loadClass(name)
+    }
+
     override fun loadClass(name: String, resolve: Boolean): Class<*> {
+        if (name.startsWith("kotlin")) {
+            try {
+                return requireNotNull(javaClass.classLoader).loadClass(name)
+            } catch (_: ClassNotFoundException) {
+            }
+        }
+        log("loadClass: $name")
+        return super.loadClass(name, resolve)
+    }
+
+    override fun findClass(name: String?): Class<*> {
+        log("findClass: $name")
         return when (name) {
             // ==== 确保一些类从同一个类加载器加载。 ====
             StablePlugin::class.java.name -> StablePlugin::class.java
@@ -39,13 +56,8 @@ internal class PluginClassLoader(
             PluginApplication::class.java.name -> PluginApplication::class.java
             PluginActivityContext::class.java.name -> PluginActivityContext::class.java
             // ====================================
-            else -> super.loadClass(name, resolve)
+            else -> super.findClass(name)
         }
-    }
-
-    override fun findClass(name: String?): Class<*> {
-        log("findClass: $name")
-        return super.findClass(name)
     }
 
     public override fun findResource(name: String?): URL? {

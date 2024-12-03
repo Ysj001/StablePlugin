@@ -26,7 +26,7 @@ internal class PluginHostClassLoader(parent: ClassLoader) : ClassLoader(parent) 
     override fun findClass(name: String?): Class<*> {
         for (i in pluginClassLoader.indices) {
             try {
-                return pluginClassLoader[i].loadClass(name)
+                return pluginClassLoader[i].loadClassFromHost(name)
             } catch (_: ClassNotFoundException) {
             }
         }

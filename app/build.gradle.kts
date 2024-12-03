@@ -81,9 +81,6 @@ android {
         viewBinding = true
         buildConfig = true
     }
-    androidResources {
-        additionalParameters += listOf("--keep-raw-values")
-    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -104,7 +101,6 @@ dependencies {
     applyAndroidKtx()
     applyAndroidCommon()
     implementation(project(":lib_plugin"))
-    implementation("androidx.startup:startup-runtime:1.2.0")
-    implementation("androidx.profileinstaller:profileinstaller:1.4.0")
-//    implementation("com.qihoo360.replugin:replugin-host-lib:2.2.4")
+//    implementation("androidx.startup:startup-runtime:1.2.0")
+//    implementation("androidx.profileinstaller:profileinstaller:1.4.0")
 }

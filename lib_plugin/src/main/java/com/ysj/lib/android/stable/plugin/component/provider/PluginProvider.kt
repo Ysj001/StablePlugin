@@ -36,7 +36,7 @@ internal class PluginProvider : ContentProvider() {
     override fun query(uri: Uri, projection: Array<out String>?, selection: String?, selectionArgs: Array<out String>?, sortOrder: String?): Cursor? {
         val unwrap = uri.unwrap
         val authority = unwrap.authority ?: return null
-        return uri.provider?.providerMap?.get(authority)?.query(uri, projection, selection, selectionArgs, sortOrder)
+        return uri.provider?.providerMap?.get(authority)?.query(unwrap, projection, selection, selectionArgs, sortOrder)
     }
 
     override fun getType(uri: Uri): String? {
@@ -48,13 +48,13 @@ internal class PluginProvider : ContentProvider() {
     override fun insert(uri: Uri, values: ContentValues?): Uri? {
         val unwrap = uri.unwrap
         val authority = unwrap.authority ?: return null
-        return uri.provider?.providerMap?.get(authority)?.insert(uri, values)
+        return uri.provider?.providerMap?.get(authority)?.insert(unwrap, values)
     }
 
     override fun delete(uri: Uri, selection: String?, selectionArgs: Array<out String>?): Int {
         val unwrap = uri.unwrap
         val authority = unwrap.authority ?: return 0
-        return uri.provider?.providerMap?.get(authority)?.delete(uri, selection, selectionArgs) ?: 0
+        return uri.provider?.providerMap?.get(authority)?.delete(unwrap, selection, selectionArgs) ?: 0
     }
 
     override fun update(uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<out String>?): Int {
@@ -62,7 +62,7 @@ internal class PluginProvider : ContentProvider() {
         val authority = unwrap.authority ?: return 0
         return uri.provider
             ?.providerMap?.get(authority)
-            ?.update(uri, values, selection, selectionArgs)
+            ?.update(unwrap, values, selection, selectionArgs)
             ?: 0
     }
 

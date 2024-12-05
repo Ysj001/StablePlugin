@@ -14,11 +14,15 @@ class StablePluginConfig private constructor(builder: Builder) {
 
     internal val eventCallback = builder.eventCallback
 
+    internal val pluginClassLoadFilter = builder.pluginClassLoadFilter
+
     class Builder {
 
         internal var isDebugEnable = false
 
         internal var eventCallback: EventCallback? = null
+
+        internal var pluginClassLoadFilter: PluginClassLoadFilter? = null
 
         fun debugEnable(enable: Boolean) = apply {
             this.isDebugEnable = enable
@@ -26,6 +30,10 @@ class StablePluginConfig private constructor(builder: Builder) {
 
         fun eventCallback(callback: EventCallback) = apply {
             this.eventCallback = callback
+        }
+
+        fun pluginClassLoadFilter(filter: PluginClassLoadFilter) = apply {
+            this.pluginClassLoadFilter = filter
         }
 
         fun build(): StablePluginConfig {

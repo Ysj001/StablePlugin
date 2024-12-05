@@ -12,9 +12,9 @@ import android.os.Build
 import android.os.Bundle
 import android.os.CancellationSignal
 import android.os.ParcelFileDescriptor
-import android.util.Log
 import android.util.Size
 import androidx.annotation.RequiresApi
+import com.ysj.lib.android.stable.plugin.StablePlugin
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -35,104 +35,104 @@ internal object PluginContentResolverProxy {
 
     @JvmStatic
     fun acquireUnstableContentProviderClient(resolver: ContentResolver, uri: Uri): ContentProviderClient? {
-        return resolver.acquireUnstableContentProviderClient(convertUri(uri))
+        return resolver.acquireUnstableContentProviderClient(wrapUri(uri))
     }
 
     @JvmStatic
     fun query(resolver: ContentResolver, uri: Uri, projection: Array<String?>?, selection: String?, selectionArgs: Array<String?>?, sortOrder: String?): Cursor? {
-        return resolver.query(convertUri(uri), projection, selection, selectionArgs, sortOrder)
+        return resolver.query(wrapUri(uri), projection, selection, selectionArgs, sortOrder)
     }
 
     @JvmStatic
     fun query(resolver: ContentResolver, uri: Uri, projection: Array<String?>?, selection: String?, selectionArgs: Array<String?>?, sortOrder: String?, cancellationSignal: CancellationSignal?): Cursor? {
-        return resolver.query(convertUri(uri), projection, selection, selectionArgs, sortOrder, cancellationSignal)
+        return resolver.query(wrapUri(uri), projection, selection, selectionArgs, sortOrder, cancellationSignal)
     }
 
     @JvmStatic
     @RequiresApi(Build.VERSION_CODES.O)
     fun query(resolver: ContentResolver, uri: Uri, projection: Array<String?>?, queryArgs: Bundle?, cancellationSignal: CancellationSignal?): Cursor? {
-        return resolver.query(convertUri(uri), projection, queryArgs, cancellationSignal)
+        return resolver.query(wrapUri(uri), projection, queryArgs, cancellationSignal)
     }
 
     @JvmStatic
     fun insert(resolver: ContentResolver, url: Uri, values: ContentValues?): Uri? {
-        return resolver.insert(convertUri(url), values)
+        return resolver.insert(wrapUri(url), values)
     }
 
     @JvmStatic
     @RequiresApi(Build.VERSION_CODES.R)
     fun insert(resolver: ContentResolver, uri: Uri, initialValues: ContentValues?, extras: Bundle?): Uri? {
-        return resolver.insert(convertUri(uri), initialValues, extras)
+        return resolver.insert(wrapUri(uri), initialValues, extras)
     }
 
     @JvmStatic
     fun bulkInsert(resolver: ContentResolver, uri: Uri, initialValues: Array<ContentValues?>): Int {
-        return resolver.bulkInsert(convertUri(uri), initialValues)
+        return resolver.bulkInsert(wrapUri(uri), initialValues)
     }
 
     @JvmStatic
     fun delete(resolver: ContentResolver, url: Uri, where: String?, selectionArgs: Array<String?>?): Int {
-        return resolver.delete(convertUri(url), where, selectionArgs)
+        return resolver.delete(wrapUri(url), where, selectionArgs)
     }
 
     @JvmStatic
     @RequiresApi(Build.VERSION_CODES.R)
     fun delete(resolver: ContentResolver, uri: Uri, extras: Bundle?): Int {
-        return resolver.delete(convertUri(uri), extras)
+        return resolver.delete(wrapUri(uri), extras)
     }
 
     @JvmStatic
     fun update(resolver: ContentResolver, uri: Uri, values: ContentValues?, where: String?, selectionArgs: Array<String?>?): Int {
-        return resolver.update(convertUri(uri), values, where, selectionArgs)
+        return resolver.update(wrapUri(uri), values, where, selectionArgs)
     }
 
     @JvmStatic
     @RequiresApi(Build.VERSION_CODES.R)
     fun update(resolver: ContentResolver, uri: Uri, values: ContentValues?, extras: Bundle?): Int {
-        return resolver.update(convertUri(uri), values, extras)
+        return resolver.update(wrapUri(uri), values, extras)
     }
 
     @JvmStatic
     @RequiresApi(Build.VERSION_CODES.Q)
     fun openFile(resolver: ContentResolver, uri: Uri, mode: String, signal: CancellationSignal?): ParcelFileDescriptor? {
-        return resolver.openFile(convertUri(uri), mode, signal)
+        return resolver.openFile(wrapUri(uri), mode, signal)
     }
 
     @JvmStatic
     @RequiresApi(Build.VERSION_CODES.Q)
     fun openAssetFile(resolver: ContentResolver, uri: Uri, mode: String, signal: CancellationSignal?): AssetFileDescriptor? {
-        return resolver.openAssetFile(convertUri(uri), mode, signal)
+        return resolver.openAssetFile(wrapUri(uri), mode, signal)
     }
 
     @JvmStatic
     @RequiresApi(Build.VERSION_CODES.Q)
     fun openTypedAssetFile(resolver: ContentResolver, uri: Uri, mimeTypeFilter: String, opts: Bundle?, signal: CancellationSignal?): AssetFileDescriptor? {
-        return resolver.openTypedAssetFile(convertUri(uri), mimeTypeFilter, opts, signal)
+        return resolver.openTypedAssetFile(wrapUri(uri), mimeTypeFilter, opts, signal)
     }
 
     @JvmStatic
     fun openInputStream(resolver: ContentResolver, uri: Uri): InputStream? {
-        return resolver.openInputStream(convertUri(uri))
+        return resolver.openInputStream(wrapUri(uri))
     }
 
     @JvmStatic
     fun openOutputStream(resolver: ContentResolver, uri: Uri): OutputStream? {
-        return resolver.openOutputStream(convertUri(uri))
+        return resolver.openOutputStream(wrapUri(uri))
     }
 
     @JvmStatic
     fun openOutputStream(resolver: ContentResolver, uri: Uri, mode: String): OutputStream? {
-        return resolver.openOutputStream(convertUri(uri), mode)
+        return resolver.openOutputStream(wrapUri(uri), mode)
     }
 
     @JvmStatic
     fun openFileDescriptor(resolver: ContentResolver, uri: Uri, mode: String): ParcelFileDescriptor? {
-        return resolver.openFileDescriptor(convertUri(uri), mode)
+        return resolver.openFileDescriptor(wrapUri(uri), mode)
     }
 
     @JvmStatic
     fun openFileDescriptor(resolver: ContentResolver, uri: Uri, mode: String, cancellationSignal: CancellationSignal?): ParcelFileDescriptor? {
-        return resolver.openFileDescriptor(convertUri(uri), mode, cancellationSignal)
+        return resolver.openFileDescriptor(wrapUri(uri), mode, cancellationSignal)
     }
 
     @JvmStatic
@@ -142,69 +142,74 @@ internal object PluginContentResolverProxy {
 
     @JvmStatic
     fun getType(resolver: ContentResolver, uri: Uri): String? {
-        return resolver.getType(convertUri(uri))
+        return resolver.getType(wrapUri(uri))
     }
 
     @JvmStatic
     fun getStreamTypes(resolver: ContentResolver, url: Uri, mimeTypeFilter: String): Array<String>? {
-        return resolver.getStreamTypes(convertUri(url), mimeTypeFilter)
+        return resolver.getStreamTypes(wrapUri(url), mimeTypeFilter)
     }
 
     @JvmStatic
     fun notifyChange(resolver: ContentResolver, uri: Uri, observer: ContentObserver?) {
-        resolver.notifyChange(convertUri(uri), observer)
+        resolver.notifyChange(wrapUri(uri), observer)
     }
 
     @JvmStatic
     fun notifyChange(resolver: ContentResolver, uri: Uri, observer: ContentObserver?, syncToNetwork: Boolean) {
         @Suppress("DEPRECATION")
-        resolver.notifyChange(convertUri(uri), observer, syncToNetwork)
+        resolver.notifyChange(wrapUri(uri), observer, syncToNetwork)
     }
 
     @JvmStatic
     @RequiresApi(Build.VERSION_CODES.N)
     fun notifyChange(resolver: ContentResolver, uri: Uri, observer: ContentObserver?, flags: Int) {
-        resolver.notifyChange(convertUri(uri), observer, flags)
+        resolver.notifyChange(wrapUri(uri), observer, flags)
     }
 
     @JvmStatic
     @RequiresApi(Build.VERSION_CODES.R)
     fun notifyChange(resolver: ContentResolver, uris: MutableCollection<Uri>, observer: ContentObserver?, flags: Int) {
-        resolver.notifyChange(uris.mapTo(ArrayList()) { convertUri(it) }, observer, flags)
+        resolver.notifyChange(uris.mapTo(ArrayList()) { wrapUri(it) }, observer, flags)
     }
 
     @JvmStatic
     fun takePersistableUriPermission(resolver: ContentResolver, uri: Uri, modeFlags: Int) {
-        resolver.takePersistableUriPermission(convertUri(uri), modeFlags)
+        resolver.takePersistableUriPermission(wrapUri(uri), modeFlags)
     }
 
     @JvmStatic
     fun releasePersistableUriPermission(resolver: ContentResolver, uri: Uri, modeFlags: Int) {
-        resolver.releasePersistableUriPermission(convertUri(uri), modeFlags)
+        resolver.releasePersistableUriPermission(wrapUri(uri), modeFlags)
     }
 
     @JvmStatic
     fun startSync(resolver: ContentResolver, uri: Uri?, extras: Bundle?) {
         @Suppress("DEPRECATION")
-        resolver.startSync(uri?.let { convertUri(it) }, extras)
+        resolver.startSync(uri?.let { wrapUri(it) }, extras)
     }
 
     @JvmStatic
     fun cancelSync(resolver: ContentResolver, uri: Uri?) {
         @Suppress("DEPRECATION")
-        resolver.cancelSync(uri?.let { convertUri(it) })
+        resolver.cancelSync(uri?.let { wrapUri(it) })
     }
 
     @JvmStatic
     @RequiresApi(Build.VERSION_CODES.Q)
     fun loadThumbnail(resolver: ContentResolver, uri: Uri, size: Size, signal: CancellationSignal?): Bitmap {
-        return resolver.loadThumbnail(convertUri(uri), size, signal)
+        return resolver.loadThumbnail(wrapUri(uri), size, signal)
     }
 
-    private fun convertUri(uri: Uri): Uri {
-        Log.i("????", "convertUri: $uri")
-        // todo
-        return uri
+    private fun wrapUri(uri: Uri): Uri {
+        val plugin = StablePlugin.findPluginByClassLoader(javaClass.classLoader!!)
+        requireNotNull(plugin)
+        return Uri.Builder()
+            .scheme(ContentResolver.SCHEME_CONTENT)
+            .authority("${StablePlugin.application.packageName}.stable.plugin.provider")
+            .appendQueryParameter(PluginProvider.QUERY_KEY_WRAP, uri.toString())
+            .appendQueryParameter(PluginProvider.QUERY_KEY_PLUGIN_NAME, plugin.name)
+            .build()
     }
 
 }

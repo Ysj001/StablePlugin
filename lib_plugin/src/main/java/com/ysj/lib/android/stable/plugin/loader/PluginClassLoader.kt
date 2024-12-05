@@ -37,7 +37,7 @@ internal class PluginClassLoader(
     }
 
     override fun loadClass(name: String, resolve: Boolean): Class<*> {
-        if (name.startsWith("kotlin")) {
+        if (name.startsWith("kotlin") || StablePlugin.config.pluginClassLoadFilter?.filter(name) == true) {
             try {
                 return requireNotNull(javaClass.classLoader).loadClass(name)
             } catch (_: ClassNotFoundException) {
@@ -56,7 +56,17 @@ internal class PluginClassLoader(
             PluginApplication::class.java.name -> PluginApplication::class.java
             PluginActivityContext::class.java.name -> PluginActivityContext::class.java
             // ====================================
-            else -> super.findClass(name)
+            else -> try {
+                super.findClass(name)
+            } catch (e: ClassNotFoundException) {
+                try {
+                    // 该 class 可能在其它 classLoader 中，尝试加载
+                    return requireNotNull(javaClass.classLoader).loadClass(name)
+                } catch (_: ClassNotFoundException) {
+                }
+                Log.w(TAG, "findClass failure. $name")
+                throw e
+            }
         }
     }
 

@@ -1,9 +1,12 @@
 package com.ysj.lib.android.stable.plugin.gradle
 
 import com.ysj.lib.bytecodeutil.plugin.api.IModifier
+import com.ysj.lib.bytecodeutil.plugin.api.logger.YLogger
 import org.objectweb.asm.Opcodes
+import org.objectweb.asm.tree.AbstractInsnNode
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.MethodInsnNode
+import org.objectweb.asm.tree.MethodNode
 import java.util.LinkedList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executor
@@ -40,6 +43,8 @@ class ChildModifier(
 
         private const val CONTENT_RESOLVER_PROXY_CLASS_NAME = "$SDK_PACKAGE_NAME/component/provider/PluginContentResolverProxy"
     }
+
+    private val logger = YLogger.getLogger(javaClass)
 
     private var applicationList = LinkedList<ClassNode>()
     private val activityList = LinkedList<ClassNode>()
@@ -99,23 +104,28 @@ class ChildModifier(
             executor.exec(latch, throwable) {
                 for (methodNode in classNode.methods) {
                     synchronized(methodNode) {
-                        for (node in methodNode.instructions) {
-                            if (node.opcode != Opcodes.INVOKEVIRTUAL || node !is MethodInsnNode) {
-                                continue
-                            }
-                            val key = node.name + node.desc.replace("(", "(Landroid/content/ContentResolver;")
-                            val desc = contentResolverProxyMethodMap[key] ?: continue
-                            node.opcode = Opcodes.INVOKESTATIC
-                            node.owner = CONTENT_RESOLVER_PROXY_CLASS_NAME
-                            node.desc = desc
+                        for (node in methodNode.instructions.toList()) {
+                            proxyContentResolverInvoke(contentResolverProxyMethodMap, node)
                         }
                     }
                 }
             }
         }
-        // 代理
         latch.await()
         throwable.get()?.also { throw it }
+    }
+
+    private fun proxyContentResolverInvoke(contentResolverProxyMethodMap: Map<String, String>, node: AbstractInsnNode) {
+        if (node.opcode != Opcodes.INVOKEVIRTUAL || node !is MethodInsnNode) {
+            return
+        }
+        // 代理 ContentResolver 的调用
+        val key = node.name + node.desc.replace("(", "(Landroid/content/ContentResolver;")
+        val desc = contentResolverProxyMethodMap[key] ?: return
+        logger.info("compatible ContentResolver call. ${node.owner} ${node.name} ${node.desc}")
+        node.opcode = Opcodes.INVOKESTATIC
+        node.owner = CONTENT_RESOLVER_PROXY_CLASS_NAME
+        node.desc = desc
     }
 
     private fun changeSuperClass(classNode: ClassNode, targetSuper: String) {

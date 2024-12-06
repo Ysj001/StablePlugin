@@ -42,6 +42,9 @@ class ChildModifier(
         // ===================================
 
         private const val CONTENT_RESOLVER_PROXY_CLASS_NAME = "$SDK_PACKAGE_NAME/component/provider/PluginContentResolverProxy"
+
+        private const val INITIALIZATION_PROVIDER_CLASS_NAME = "androidx/startup/InitializationProvider"
+        private const val INITIALIZATION_PROVIDER_COMPAT_CLASS_NAME = "com/ysj/lib/android/stable/plugin/component/provider/InitializationProviderCompat"
     }
 
     private val logger = YLogger.getLogger(javaClass)
@@ -105,6 +108,7 @@ class ChildModifier(
                 for (methodNode in classNode.methods) {
                     synchronized(methodNode) {
                         for (node in methodNode.instructions.toList()) {
+                            initializationProviderCompat(classNode, methodNode, node)
                             proxyContentResolverInvoke(contentResolverProxyMethodMap, node)
                         }
                     }
@@ -113,6 +117,25 @@ class ChildModifier(
         }
         latch.await()
         throwable.get()?.also { throw it }
+    }
+
+    private fun initializationProviderCompat(classNode: ClassNode, methodNode: MethodNode, node: AbstractInsnNode) {
+        // 兼容 InitializationProvider
+        if (classNode.name != INITIALIZATION_PROVIDER_CLASS_NAME
+            || methodNode.name != "onCreate"
+            || node !is MethodInsnNode
+            || node.name != "discoverAndInitialize"
+            || node.desc != "()V") {
+            return
+        }
+        node.desc = "(Landroid/os/Bundle;)V"
+        methodNode.instructions.insertBefore(node, MethodInsnNode(
+            Opcodes.INVOKESTATIC,
+            INITIALIZATION_PROVIDER_COMPAT_CLASS_NAME,
+            "getInitializationProviderMetaData",
+            "()Landroid/os/Bundle;",
+        ))
+        logger.info("compatible InitializationProvider")
     }
 
     private fun proxyContentResolverInvoke(contentResolverProxyMethodMap: Map<String, String>, node: AbstractInsnNode) {

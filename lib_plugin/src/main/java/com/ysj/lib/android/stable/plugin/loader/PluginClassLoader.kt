@@ -37,7 +37,7 @@ internal class PluginClassLoader(
     }
 
     override fun loadClass(name: String, resolve: Boolean): Class<*> {
-        if (name.startsWith("kotlin") || StablePlugin.config.pluginClassLoadFilter?.filter(name) == true) {
+        if (name.startsWith("kotlin") || StablePlugin.config.pluginClassLoadHook?.loadFromHost(name) == true) {
             try {
                 return requireNotNull(javaClass.classLoader).loadClass(name)
             } catch (_: ClassNotFoundException) {

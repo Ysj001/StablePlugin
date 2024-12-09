@@ -48,7 +48,6 @@ internal class PluginClassLoader(
     }
 
     override fun findClass(name: String?): Class<*> {
-        log("findClass: $name")
         return when (name) {
             // ==== 确保一些类从同一个类加载器加载。 ====
             StablePlugin::class.java.name -> StablePlugin::class.java
@@ -57,6 +56,7 @@ internal class PluginClassLoader(
             PluginActivityContext::class.java.name -> PluginActivityContext::class.java
             // ====================================
             else -> try {
+                log("findClass: $name")
                 super.findClass(name)
             } catch (e: ClassNotFoundException) {
                 try {

@@ -22,6 +22,7 @@ class HostMain : Plugin<Project> {
                     HostManifestTransformTask::class.java,
                 )
                 manifestTransformTask.configure {
+                    it.group = "stable_plugin"
                     val manifestDirPath = project.properties["plugin.manifest.dir"] as String?
                     if (manifestDirPath.isNullOrEmpty()) {
                         it.inputPluginManifests.set(

@@ -31,10 +31,12 @@ class ChildMain : Plugin<Project> {
         project.extensions.configure(AndroidComponentsExtension::class.java) { appExt ->
             appExt.onVariants { variant ->
                 val copyManifestTask = project.tasks.register("${variant.name}CopyPluginManifest", CopyPluginManifest::class.java) {
+                    it.group = "stable_plugin"
                     it.output.set(project.rootProject.layout.buildDirectory.get().dir("manifest"))
                     it.input.set(variant.artifacts.get(SingleArtifact.MERGED_MANIFEST))
                 }
                 val copyApkTask = project.tasks.register("${variant.name}CopyPluginApk", CopyPluginApk::class.java) {
+                    it.group = "stable_plugin"
                     it.builtArtifactsLoader.set(variant.artifacts.getBuiltArtifactsLoader())
                     it.output.set(project.rootProject.layout.buildDirectory)
                     it.finalizedBy(copyManifestTask.name)

@@ -30,12 +30,16 @@ class ChildModifier(
         // =============== 原始 ===============
         private const val APPLICATION_CLASS_NAME = "android/app/Application"
 
+        private const val SERVICE_CLASS_NAME = "android/app/Service"
+
         private const val ACTIVITY_CLASS_NAME = "android/app/Activity"
         private const val ACTIVITY_APP_COMPAT_CLASS_NAME = "androidx/appcompat/app/AppCompatActivity"
         // ===================================
 
         // =============== 目标 ===============
         private const val PLUGIN_APPLICATION_CLASS_NAME = "$SDK_PACKAGE_NAME/component/PluginApplication"
+
+        private const val PLUGIN_SERVICE_CLASS_NAME = "$SDK_PACKAGE_NAME/component/service/PluginService"
 
         private const val PLUGIN_ACTIVITY_CLASS_NAME = "$SDK_PACKAGE_NAME/component/activity/PluginActivity"
         private const val PLUGIN_ACTIVITY_APP_COMPAT_CLASS_NAME = "$SDK_PACKAGE_NAME/component/activity/PluginAppCompatActivity"
@@ -50,6 +54,7 @@ class ChildModifier(
     private val logger = YLogger.getLogger(javaClass)
 
     private var applicationList = LinkedList<ClassNode>()
+    private val serviceList = LinkedList<ClassNode>()
     private val activityList = LinkedList<ClassNode>()
     private val activityAppCompatList = LinkedList<ClassNode>()
 
@@ -66,6 +71,9 @@ class ChildModifier(
         when (classNode.superName) {
             APPLICATION_CLASS_NAME -> synchronized(applicationList) {
                 applicationList.add(classNode)
+            }
+            SERVICE_CLASS_NAME -> synchronized(serviceList) {
+                serviceList.add(classNode)
             }
             ACTIVITY_CLASS_NAME -> synchronized(activityList) {
                 activityList.add(classNode)
@@ -91,6 +99,9 @@ class ChildModifier(
         executor.exec(latch, throwable) {
             for (classNode in applicationList) {
                 changeSuperClass(classNode, PLUGIN_APPLICATION_CLASS_NAME)
+            }
+            for (classNode in serviceList) {
+                changeSuperClass(classNode, PLUGIN_SERVICE_CLASS_NAME)
             }
             for (classNode in activityAppCompatList) {
                 changeSuperClass(classNode, PLUGIN_ACTIVITY_APP_COMPAT_CLASS_NAME)

@@ -1,5 +1,6 @@
 package com.ysj.lib.android.stable.plugin.gradle
 
+import com.android.build.api.artifact.OutOperationRequest
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.BuiltArtifactsLoader
@@ -38,12 +39,18 @@ class ChildMain : Plugin<Project> {
                     it.output.set(project.rootProject.layout.buildDirectory)
                     it.finalizedBy(copyManifestTask.name)
                 }
-                variant.artifacts
-                    .use(copyApkTask)
-                    .wiredWith {
-                        it.input
-                    }
-                    .toListenTo(SingleArtifact.APK)
+                // 兼容到的低版本（agp 7.4 保持和 bcu 一致），只影响 copyApkTask 是否自动触发
+                val hasToListenTo = OutOperationRequest::class
+                    .java.methods
+                    .find { it.name == "toListenTo" } != null
+                if (hasToListenTo) {
+                    variant.artifacts
+                        .use(copyApkTask)
+                        .wiredWith {
+                            it.input
+                        }
+                        .toListenTo(SingleArtifact.APK)
+                }
             }
         }
     }

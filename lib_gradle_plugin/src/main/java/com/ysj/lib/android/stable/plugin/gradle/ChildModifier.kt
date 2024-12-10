@@ -64,13 +64,13 @@ class ChildModifier(
             return
         }
         when (classNode.superName) {
-            APPLICATION_CLASS_NAME -> {
+            APPLICATION_CLASS_NAME -> synchronized(applicationList) {
                 applicationList.add(classNode)
             }
-            ACTIVITY_CLASS_NAME -> {
+            ACTIVITY_CLASS_NAME -> synchronized(activityList) {
                 activityList.add(classNode)
             }
-            ACTIVITY_APP_COMPAT_CLASS_NAME -> {
+            ACTIVITY_APP_COMPAT_CLASS_NAME -> synchronized(activityAppCompatList) {
                 activityAppCompatList.add(classNode)
             }
         }

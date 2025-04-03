@@ -4,9 +4,9 @@ import android.app.Application
 import android.content.ContentProvider
 import android.content.pm.PackageInfo
 import android.content.res.Configuration
-import android.content.res.loader.ResourcesLoader
 import androidx.collection.ArrayMap
 import com.ysj.lib.android.stable.plugin.component.PluginApplication
+import com.ysj.lib.android.stable.plugin.component.provider.PluginProviderContext
 
 /**
  * 封装 plugin 相关的数据。
@@ -81,7 +81,8 @@ data class Plugin internal constructor(
                 .getDeclaredConstructor()
                 .newInstance()
                 as ContentProvider
-            provider.attachInfo(this.application ?: hostApplication, providerInfo)
+            val context = this.application ?: PluginProviderContext(hostApplication, this)
+            provider.attachInfo(context, providerInfo)
             providerMap[providerInfo.authority] = provider
         }
     }

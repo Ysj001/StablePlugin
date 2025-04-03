@@ -105,9 +105,17 @@ object StablePlugin {
                 PackageManager.GET_META_DATA,
         )
         config.eventCallback?.onInitialized()
+        // 加载已经安装过的插件
         sdkRootDir.list()?.forEach { pluginName ->
             if (pluginName.pluginInstalledFile.isFile) {
-                val plugin = installPluginInternal(pluginName)
+                val plugin = try {
+                    installPluginInternal(pluginName)
+                } catch (e: Exception) {
+                    Log.w(TAG, "install plugin failure.", e)
+                    // 说明该插件会导致问题，将其删除
+                    pluginName.pluginInstallDir.runCatching { deleteRecursively() }
+                    return@forEach
+                }
                 installedPluginMap[pluginName] = plugin
                 pluginHostClassLoader.addPluginClassLoader(plugin.classLoader as PluginClassLoader)
                 config.eventCallback?.onPluginInstalled(plugin)

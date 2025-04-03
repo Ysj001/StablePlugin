@@ -10,6 +10,7 @@ bcu {
     config {
         loggerLevel = 1
         modifiers = arrayOf(
+            com.ysj.lib.bcu.modifier.component.di.ComponentDIModifier::class.java,
         )
     }
     filterNot { variant, entryName ->
@@ -18,6 +19,11 @@ bcu {
             && !entryName.startsWith("androidx")
     }
 }
+
+// 演示对 component-di 功能的支持
+ext["component.di.checkImpl"] = false
+ext["component.di.cpi_proxy_class"] = "com/ysj/demo/aplugin/PluginApiProxy"
+ext["component.di.cpi_proxy_method"] = "proxy"
 
 android {
     namespace = "com.ysj.demo.aplugin"
@@ -100,7 +106,13 @@ dependencies {
     applyKotlin()
     applyAndroidKtx()
     applyAndroidCommon()
+    implementation(kotlin("reflect"))
     implementation(project(":lib_plugin"))
+    implementation(modifier_component_di_api)
+
+    // 引入插件 api
+    implementation(project(":demo_plugin1:api"))
+
 //    implementation("androidx.startup:startup-runtime:1.2.0")
 //    implementation("androidx.profileinstaller:profileinstaller:1.4.0")
 }

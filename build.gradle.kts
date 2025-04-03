@@ -17,6 +17,7 @@ buildscript {
         classpath("org.jetbrains.dokka:dokka-gradle-plugin:1.4.30")
         // bcu
         classpath(bcu_plugin)
+        classpath(modifier_component_di)
     }
 }
 

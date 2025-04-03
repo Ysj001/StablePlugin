@@ -13,8 +13,8 @@ const val bcu_plugin = "com.github.Ysj001.BytecodeUtil:plugin:$BCU_VERSION"
 const val bcu_plugin_api = "com.github.Ysj001.BytecodeUtil:plugin-api:$BCU_VERSION"
 const val modifier_aspect = "com.github.Ysj001.bcu-modifier-aspect:modifier-aspect:1.0.0-beta2"
 const val modifier_aspect_api = "com.github.Ysj001.bcu-modifier-aspect:modifier-aspect-api:1.0.0-beta2"
-const val modifier_component_di = "com.github.Ysj001.bcu-modifier-component-di:modifier-component-di:1.0.1"
-const val modifier_component_di_api = "com.github.Ysj001.bcu-modifier-component-di:modifier-component-di-api:1.0.1"
+const val modifier_component_di = "com.github.Ysj001.bcu-modifier-component-di:modifier-component-di:1.0.2"
+const val modifier_component_di_api = "com.github.Ysj001.bcu-modifier-component-di:modifier-component-di-api:1.0.2"
 // ==========================================
 
 // ================ czm 相关 ==================
@@ -49,6 +49,7 @@ fun DependencyHandler.applyAndroidKtx(configName: String = "implementation") {
     add(configName, "androidx.activity:activity-ktx:1.9.2")
     add(configName, "androidx.fragment:fragment-ktx:1.8.3")
     val lifecycleVersion = "2.8.5"
+    add(configName, "androidx.lifecycle:lifecycle-process:$lifecycleVersion")
     add(configName, "androidx.lifecycle:lifecycle-livedata-core-ktx:$lifecycleVersion")
     add(configName, "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion")
     add(configName, "androidx.lifecycle:lifecycle-reactivestreams-ktx:$lifecycleVersion")

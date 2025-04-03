@@ -94,4 +94,5 @@ dependencies {
     applyAndroidKtx()
     applyAndroidCommon()
     implementation(project(":lib_plugin"))
+    implementation(modifier_component_di_api)
 }

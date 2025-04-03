@@ -9,6 +9,6 @@ private val hasPlugin = File(rootDir, "repos").run {
 
 if (hasPlugin) {
     include(":app")
-    include(":demo_plugin1")
+    include(":demo_plugin1", ":demo_plugin1:api")
     include(":demo_plugin2")
 }

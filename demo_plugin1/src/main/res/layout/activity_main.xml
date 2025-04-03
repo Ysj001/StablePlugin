@@ -25,31 +25,38 @@
         android:textColor="@color/teal_200" />
 
     <Button
+        android:id="@+id/btnReInit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="重新加载插件" />
+
+    <Button
         android:id="@+id/btnToActivity1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="to activity1" />
+        android:text="去测试页面1" />
 
     <Button
         android:id="@+id/btnTestDemo1Provider"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="Test Demo1Provider" />
+        android:text="测试ContentProvider" />
 
     <Button
         android:id="@+id/btnTestDemo1Service"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="Test Demo1Service" />
+        android:text="测试Service" />
 
     <Button
         android:id="@+id/btnTestDemo1Receiver"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="Test Demo1Receiver" />
+        android:text="测试Receiver" />
 
 </LinearLayout>

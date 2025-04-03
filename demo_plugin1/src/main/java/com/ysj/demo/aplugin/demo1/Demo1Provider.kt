@@ -39,7 +39,10 @@ class Demo1Provider : ContentProvider() {
         Log.i(TAG, "query. $uri")
         val columns = arrayOf(COLUMNS_ANSWER)
         val cursor = MatrixCursor(columns, 1)
-        cursor.addRow(arrayOf(javaClass.name))
+        cursor.addRow(arrayOf("""
+            question:${uri.getQueryParameter(URI_QUERY_KEY_QUESTION)}
+            answer:${javaClass.simpleName}
+        """.trimIndent()))
         return cursor
     }
 

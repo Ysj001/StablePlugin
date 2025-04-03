@@ -5,37 +5,27 @@
     android:layout_height="match_parent"
     android:gravity="center"
     android:orientation="vertical"
-    tools:context=".MainActivity">
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="插件加载根目录：" />
-
-    <EditText
-        android:id="@+id/editPluginStorageDir"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:hint="插件加载根目录" />
+    tools:context=".Demo1TestActivity">
 
     <Button
-        android:id="@+id/btnPluginStorageDirConfirm"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="应用该目录" />
-
-    <Button
-        android:id="@+id/btnTestPlugin1"
+        android:id="@+id/btnInstallPlugin"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="测试插件1" />
+        android:text="安装插件" />
 
     <Button
-        android:id="@+id/btnTestPlugin2"
+        android:id="@+id/btnUninstallPlugin"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="测试插件2" />
+        android:text="卸载插件" />
+
+    <Button
+        android:id="@+id/btnStartActivity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="启动插件2主页" />
 
 </LinearLayout>

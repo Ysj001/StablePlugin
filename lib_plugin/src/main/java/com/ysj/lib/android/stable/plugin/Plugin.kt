@@ -37,7 +37,7 @@ data class Plugin internal constructor(
 
     fun callApplicationCreate(hostApplication: Application) {
         var application = this.application
-        if (application != null) {
+        if (application != null || packageInfo.applicationInfo.name.isNullOrEmpty()) {
             return
         }
         application = classLoader

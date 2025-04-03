@@ -98,6 +98,7 @@ abstract class HostManifestTransformTask : DefaultTask() {
                 .firstOrNull()
                 ?: continue
             pluginApplicationNode as Node
+            processMetadata(hostApplicationNode, pluginApplicationNode)
             processActivity(hostApplicationNode, pluginApplicationNode)
             processActivityAlias(hostApplicationNode, pluginApplicationNode)
             processService(hostApplicationNode, pluginApplicationNode)
@@ -154,7 +155,7 @@ abstract class HostManifestTransformTask : DefaultTask() {
                 continue
             }
             hostApplicationNode.append(receiverNode)
-            logger.lifecycle("insert plugin receiver. $name")
+            logger.lifecycle("insert plugin receiver. ${receiverNode.attribute(androidName)}")
         }
     }
 
@@ -173,7 +174,7 @@ abstract class HostManifestTransformTask : DefaultTask() {
                 continue
             }
             hostApplicationNode.append(serviceNode)
-            logger.lifecycle("insert plugin service. $name")
+            logger.lifecycle("insert plugin service. ${serviceNode.attribute(androidName)}")
         }
     }
 
@@ -197,7 +198,7 @@ abstract class HostManifestTransformTask : DefaultTask() {
             activityAliasNode.attributes().remove(androidIcon)
             activityAliasNode.attributes().remove(androidRoundIcon)
             hostApplicationNode.append(activityAliasNode)
-            logger.lifecycle("insert plugin activity alias. $name")
+            logger.lifecycle("insert plugin activity alias. ${activityAliasNode.attribute(androidName)}")
         }
     }
 
@@ -246,7 +247,26 @@ abstract class HostManifestTransformTask : DefaultTask() {
                 }
             }
             hostApplicationNode.append(activityNode)
-            logger.lifecycle("insert plugin activity. $name")
+            logger.lifecycle("insert plugin activity. ${activityNode.attribute(androidName)}")
+        }
+    }
+
+    private fun processMetadata(hostApplicationNode: Node, pluginApplicationNode: Node) {
+        val hostMetadataSet = hostApplicationNode
+            .getAt(`meta-data`)
+            .asSequence()
+            .filterIsInstance<Node>()
+            .map { it.attribute(androidName) }
+            .toSet()
+        for (metadataNode in pluginApplicationNode.getAt(`meta-data`)) {
+            if (metadataNode !is Node) {
+                continue
+            }
+            if (metadataNode.attribute(androidName) in hostMetadataSet) {
+                continue
+            }
+            hostApplicationNode.append(metadataNode)
+            logger.lifecycle("insert plugin meta-data. ${metadataNode.attribute(androidName)}")
         }
     }
 

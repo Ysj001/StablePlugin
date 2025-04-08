@@ -4,7 +4,7 @@
 
     <application
         android:appComponentFactory="com.ysj.lib.android.stable.plugin.PluginComponentFactory"
-        tools:ignore="UnusedAttribute"
+        tools:ignore="NewApi,UnusedAttribute"
         tools:replace="android:appComponentFactory">
 
         <!-- 作为 launchMode=standard 时的坑位 -->

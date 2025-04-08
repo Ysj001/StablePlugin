@@ -15,6 +15,7 @@ import android.util.AttributeSet
 import android.view.InflateException
 import android.view.LayoutInflater
 import android.view.View
+import androidx.fragment.app.FragmentContainerView
 import com.ysj.lib.android.stable.plugin.StablePlugin
 import com.ysj.lib.android.stable.plugin.StablePlugin.pluginInstalledFile
 
@@ -105,6 +106,10 @@ internal class PluginActivityContext(
         override fun onCreateView(name: String, context: Context, attrs: AttributeSet): View? {
             if ("." !in name) {
                 // system view 不处理
+                return null
+            }
+            if (name == FragmentContainerView::class.java.name) {
+                // FragmentContainerView 不处理
                 return null
             }
             /*

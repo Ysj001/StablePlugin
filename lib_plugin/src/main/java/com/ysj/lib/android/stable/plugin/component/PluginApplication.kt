@@ -20,7 +20,7 @@ import com.ysj.lib.android.stable.plugin.StablePlugin.pluginInstalledFile
  * @author Ysj
  * Create time: 2024/9/23
  */
-internal abstract class PluginApplication : Application() {
+internal open class PluginApplication : Application() {
 
     lateinit var plugin: Plugin
 

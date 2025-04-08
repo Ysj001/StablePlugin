@@ -6,7 +6,6 @@ import android.content.pm.PackageInfo
 import android.content.res.Configuration
 import androidx.collection.ArrayMap
 import com.ysj.lib.android.stable.plugin.component.PluginApplication
-import com.ysj.lib.android.stable.plugin.component.provider.PluginProviderContext
 
 /**
  * 封装 plugin 相关的数据。
@@ -15,6 +14,10 @@ import com.ysj.lib.android.stable.plugin.component.provider.PluginProviderContex
  * Create time: 2024/9/15
  */
 data class Plugin internal constructor(
+    /**
+     * 宿主的 [Application]。
+     */
+    val hostApplication: Application,
     /**
      * 插件名。
      */
@@ -29,41 +32,27 @@ data class Plugin internal constructor(
     val packageInfo: PackageInfo,
 ) {
 
-    internal var application: PluginApplication? = null
-        private set
+    val pluginApplication: Application get() = application
 
-    internal var providerMap: ArrayMap<String, ContentProvider>? = null
-        private set
-
-    fun callApplicationCreate(hostApplication: Application) {
-        var application = this.application
-        if (application != null || packageInfo.applicationInfo.name.isNullOrEmpty()) {
-            return
-        }
-        application = classLoader
+    internal val application = if (packageInfo.applicationInfo.name.isNullOrEmpty()) {
+        PluginApplication()
+    } else {
+        classLoader
             .loadClass(packageInfo.applicationInfo.name)
             .getDeclaredConstructor()
             .newInstance()
             as PluginApplication
-        this.application = application
+    }
+
+    internal var providerMap: ArrayMap<String, ContentProvider>? = null
+        private set
+
+    init {
         application.plugin = this
         application.attachBaseContext(hostApplication.baseContext)
-        application.onCreate()
     }
 
-    fun callApplicationOnLowMemory() {
-        this.application?.onLowMemory()
-    }
-
-    fun callApplicationOnTrimMemory(level: Int) {
-        this.application?.onTrimMemory(level)
-    }
-
-    fun callApplicationOnConfigurationChanged(newConfig: Configuration) {
-        this.application?.onConfigurationChanged(newConfig)
-    }
-
-    fun installProviders(hostApplication: Application) {
+    fun installProviders() {
         if (packageInfo.providers.isNullOrEmpty()) {
             return
         }
@@ -81,10 +70,25 @@ data class Plugin internal constructor(
                 .getDeclaredConstructor()
                 .newInstance()
                 as ContentProvider
-            val context = this.application ?: PluginProviderContext(hostApplication, this)
-            provider.attachInfo(context, providerInfo)
+            provider.attachInfo(application, providerInfo)
             providerMap[providerInfo.authority] = provider
         }
+    }
+
+    fun callApplicationCreate() {
+        application.onCreate()
+    }
+
+    fun callApplicationOnLowMemory() {
+        application.onLowMemory()
+    }
+
+    fun callApplicationOnTrimMemory(level: Int) {
+        application.onTrimMemory(level)
+    }
+
+    fun callApplicationOnConfigurationChanged(newConfig: Configuration) {
+        application.onConfigurationChanged(newConfig)
     }
 
     fun callProviderOnLowMemory() {

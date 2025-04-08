@@ -247,6 +247,7 @@ object StablePlugin {
             librarySearchPath = solibDir.absolutePath,
         )
         return Plugin(
+            hostApplication = application,
             name = pluginName,
             classLoader = classLoader,
             packageInfo = packageInfo,

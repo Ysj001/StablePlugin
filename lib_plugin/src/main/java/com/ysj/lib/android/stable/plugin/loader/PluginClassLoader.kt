@@ -5,7 +5,6 @@ import com.ysj.lib.android.stable.plugin.Plugin
 import com.ysj.lib.android.stable.plugin.StablePlugin
 import com.ysj.lib.android.stable.plugin.component.PluginApplication
 import com.ysj.lib.android.stable.plugin.component.activity.PluginActivityContext
-import com.ysj.lib.android.stable.plugin.component.provider.PluginProviderContext
 import com.ysj.lib.android.stable.plugin.component.service.PluginServiceContext
 import dalvik.system.DexClassLoader
 import java.net.URL
@@ -57,7 +56,6 @@ internal class PluginClassLoader(
             PluginApplication::class.java.name -> PluginApplication::class.java
             PluginActivityContext::class.java.name -> PluginActivityContext::class.java
             PluginServiceContext::class.java.name -> PluginServiceContext::class.java
-            PluginProviderContext::class.java.name -> PluginProviderContext::class.java
             // ====================================
             else -> try {
                 log("findClass: $name")

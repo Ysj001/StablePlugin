@@ -60,7 +60,7 @@ internal class PluginServiceContext(
     }
 
     override fun getApplicationContext(): Context {
-        return plugin.application ?: StablePlugin.application
+        return plugin.application
     }
 
     override fun getApplicationInfo(): ApplicationInfo {

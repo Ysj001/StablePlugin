@@ -75,22 +75,6 @@ data class Plugin internal constructor(
         }
     }
 
-    fun callApplicationCreate() {
-        application.onCreate()
-    }
-
-    fun callApplicationOnLowMemory() {
-        application.onLowMemory()
-    }
-
-    fun callApplicationOnTrimMemory(level: Int) {
-        application.onTrimMemory(level)
-    }
-
-    fun callApplicationOnConfigurationChanged(newConfig: Configuration) {
-        application.onConfigurationChanged(newConfig)
-    }
-
     fun callProviderOnLowMemory() {
         providerMap?.values?.forEach {
             it.onLowMemory()

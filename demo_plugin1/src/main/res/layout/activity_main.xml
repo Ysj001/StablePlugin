@@ -59,4 +59,12 @@
         android:layout_marginTop="24dp"
         android:text="测试Receiver" />
 
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/fragmentTest"
+        android:name="com.ysj.demo.aplugin.demo1.Demo1Fragment"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        tools:layout="@layout/demo1_fragment_test" />
+
 </LinearLayout>

@@ -5,6 +5,7 @@ import android.content.ContextWrapper
 import android.content.Intent
 import android.content.res.AssetManager
 import android.content.res.Resources
+import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 
 /**
@@ -40,6 +41,11 @@ abstract class PluginAppCompatActivity : AppCompatActivity() {
             else -> PluginActivityContext(newBase, javaClass)
         }
         super.attachBaseContext(context)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        intent.setExtrasClassLoader(classLoader)
+        super.onCreate(savedInstanceState)
     }
 
     override fun getClassLoader(): ClassLoader {

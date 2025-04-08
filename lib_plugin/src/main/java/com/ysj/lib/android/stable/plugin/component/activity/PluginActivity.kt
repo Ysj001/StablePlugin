@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.res.AssetManager
 import android.content.res.Resources
+import android.os.Bundle
 
 /**
  * 插件 [Activity]。
@@ -31,6 +32,11 @@ internal abstract class PluginActivity : Activity() {
             else -> PluginActivityContext(newBase, javaClass)
         }
         super.attachBaseContext(context)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        intent.setExtrasClassLoader(classLoader)
+        super.onCreate(savedInstanceState)
     }
 
     override fun getClassLoader(): ClassLoader {

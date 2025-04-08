@@ -78,8 +78,8 @@ class MainApplication : Application() {
 
         override fun onPluginInstalled(plugin: Plugin) {
             Log.d(TAG, "onPluginInstalled: $plugin")
-            plugin.callApplicationCreate(this@MainApplication)
-            plugin.installProviders(this@MainApplication)
+            plugin.installProviders()
+            plugin.pluginApplication.onCreate()
             pluginSet.add(plugin)
         }
 
@@ -91,21 +91,21 @@ class MainApplication : Application() {
 
         fun callOnLowMemory() {
             pluginSet.forEach {
-                it.callApplicationOnLowMemory()
+                it.pluginApplication.onLowMemory()
                 it.callProviderOnLowMemory()
             }
         }
 
         fun callOnTrimMemory(level: Int) {
             pluginSet.forEach {
-                it.callApplicationOnTrimMemory(level)
+                it.pluginApplication.onTrimMemory(level)
                 it.callProviderOnTrimMemory(level)
             }
         }
 
         fun callOnConfigurationChanged(newConfig: Configuration) {
             pluginSet.forEach {
-                it.callApplicationOnConfigurationChanged(newConfig)
+                it.pluginApplication.onConfigurationChanged(newConfig)
                 it.callProviderOnConfigurationChanged(newConfig)
             }
         }

@@ -27,7 +27,6 @@ class MainApplication : Application() {
     }
 
     private val pluginEventCallback = StablePluginEventCallbackImpl()
-    private val pluginClassLoadHook = PluginClassLoadHookImpl()
 
     override fun attachBaseContext(base: Context?) {
         super.attachBaseContext(base)
@@ -39,10 +38,15 @@ class MainApplication : Application() {
             .Builder()
             .debugEnable(true)
             .eventCallback(pluginEventCallback)
-            .pluginClassLoadHook(pluginClassLoadHook)
+            .pluginClassLoadHook(PluginClassLoadHookImpl())
             .build()
         StablePlugin.init(this, config)
         PluginApiProxy.init(this)
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        pluginEventCallback.callOnCreate()
     }
 
     override fun onTrimMemory(level: Int) {
@@ -72,21 +76,32 @@ class MainApplication : Application() {
 
         private val pluginSet = ArraySet<Plugin>()
 
+        private var isApplicationCreated = false
+
         override fun onInitialized() {
             Log.d(TAG, "onInitialized.")
         }
 
         override fun onPluginInstalled(plugin: Plugin) {
             Log.d(TAG, "onPluginInstalled: $plugin")
-            plugin.installProviders()
-            plugin.pluginApplication.onCreate()
             pluginSet.add(plugin)
+            plugin.installProviders()
+            if (isApplicationCreated) {
+                plugin.pluginApplication.onCreate()
+            }
         }
 
         override fun onPluginUninstalled(plugin: Plugin) {
             Log.d(TAG, "onPluginUninstalled: $plugin")
             pluginSet.remove(plugin)
             PluginApiProxy.onPluginUninstalled(plugin)
+        }
+
+        fun callOnCreate() {
+            isApplicationCreated = true
+            pluginSet.forEach {
+                it.pluginApplication.onCreate()
+            }
         }
 
         fun callOnLowMemory() {

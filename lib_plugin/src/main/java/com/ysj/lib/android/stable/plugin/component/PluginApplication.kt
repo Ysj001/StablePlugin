@@ -26,6 +26,8 @@ internal open class PluginApplication : Application() {
 
     private lateinit var resources: Resources
 
+    private var theme: Resources.Theme? = null
+
     public override fun attachBaseContext(base: Context) {
         super.attachBaseContext(base)
         resources = base.packageManager.getResourcesForApplication(plugin.packageInfo.applicationInfo)
@@ -67,6 +69,20 @@ internal open class PluginApplication : Application() {
 
     override fun unregisterOnProvideAssistDataListener(callback: OnProvideAssistDataListener?) {
         StablePlugin.application.unregisterOnProvideAssistDataListener(callback)
+    }
+
+    override fun getTheme(): Resources.Theme {
+        var theme = this.theme
+        if (theme == null) {
+            theme = requireNotNull(resources.newTheme())
+            theme.applyStyle(plugin.packageInfo.applicationInfo.theme, false)
+            this.theme = theme
+        }
+        return theme
+    }
+
+    override fun getAssets(): AssetManager {
+        return resources.assets
     }
 
     override fun getResources(): Resources {

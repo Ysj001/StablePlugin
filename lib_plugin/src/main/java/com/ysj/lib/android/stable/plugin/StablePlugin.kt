@@ -105,30 +105,15 @@ object StablePlugin {
                 PackageManager.GET_META_DATA,
         )
         config.eventCallback?.onInitialized()
-        // 加载已经安装过的插件
-        sdkRootDir.list()?.forEach { pluginName ->
-            if (pluginName.pluginInstalledFile.isFile) {
-                val plugin = try {
-                    installPluginInternal(pluginName)
-                } catch (e: Exception) {
-                    Log.w(TAG, "install plugin failure.", e)
-                    // 说明该插件会导致问题，将其删除
-                    pluginName.pluginInstallDir.runCatching { deleteRecursively() }
-                    return@forEach
-                }
-                installedPluginMap[pluginName] = plugin
-                pluginHostClassLoader.addPluginClassLoader(plugin.classLoader as PluginClassLoader)
-                config.eventCallback?.onPluginInstalled(plugin)
-            }
-        }
     }
 
     /**
      * 安装插件。
      */
-    suspend fun installPlugin(pluginName: String, pluginFile: File) {
-        if (pluginName in installedPluginMap) {
-            return
+    suspend fun installPlugin(pluginName: String, pluginFile: File): Plugin {
+        val installed = installedPluginMap[pluginName]
+        if (installed != null) {
+            return installed
         }
         if (!pluginFile.isFile) {
             throw FileNotFoundException(pluginFile.absolutePath)
@@ -178,8 +163,9 @@ object StablePlugin {
         withContext(Dispatchers.Main.immediate) {
             installedPluginMap[pluginName] = plugin
             pluginHostClassLoader.addPluginClassLoader(plugin.classLoader as PluginClassLoader)
+            config.eventCallback?.onPluginInstalled(plugin)
         }
-        config.eventCallback?.onPluginInstalled(plugin)
+        return plugin
     }
 
     /**
@@ -189,9 +175,55 @@ object StablePlugin {
         val plugin = installedPluginMap.remove(pluginName) ?: return@withContext
         pluginHostClassLoader.removePluginClassLoader(plugin.classLoader as PluginClassLoader)
         withContext(Dispatchers.IO) {
-            plugin.name.pluginInstallDir.deleteRecursively()
+            plugin.name.pluginInstallDir.runCatching { deleteRecursively() }
         }
         config.eventCallback?.onPluginUninstalled(plugin)
+    }
+
+    /**
+     * 安装已经释放到框架中的插件。
+     */
+    @MainThread
+    fun installReleasedPlugin(pluginName: String): Plugin? {
+        if (!checkPluginReleased(pluginName)) {
+            return null
+        }
+        val plugin = runCatching { installPluginInternal(pluginName) }
+            .getOrNull()
+            ?: return null
+        installedPluginMap[pluginName] = plugin
+        pluginHostClassLoader.addPluginClassLoader(plugin.classLoader as PluginClassLoader)
+        config.eventCallback?.onPluginInstalled(plugin)
+        return plugin
+    }
+
+    /**
+     * 获取插件包信息。
+     */
+    @MainThread
+    fun getPluginPackageInfo(pluginName: String): PackageInfo? {
+        val plugin = installedPluginMap[pluginName]
+        if (plugin != null) {
+            return plugin.packageInfo
+        }
+        val pluginFile = pluginName.pluginInstalledFile
+        if (!pluginFile.isFile) {
+            return null
+        }
+        return runCatching { installPluginInternal(pluginName) }.getOrNull()?.packageInfo
+    }
+
+    /**
+     * 检查插件是否已经在框架中释放。
+     *
+     * @return if released return true
+     */
+    @MainThread
+    fun checkPluginReleased(pluginName: String): Boolean {
+        if (checkPluginInstalled(pluginName)) {
+            return true
+        }
+        return pluginName.pluginInstalledFile.isFile
     }
 
     /**

@@ -6,6 +6,8 @@ import android.app.Instrumentation
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import com.ysj.lib.android.stable.plugin.component.activity.PluginActivity
+import com.ysj.lib.android.stable.plugin.loader.PluginClassLoader
 import java.lang.reflect.Modifier
 
 /**
@@ -23,7 +25,6 @@ class InstrumentationCompat(
     }
 
     override fun newApplication(cl: ClassLoader, className: String, context: Context): Application {
-        log("newApplication.", Throwable())
         return StablePlugin.application
     }
 
@@ -34,10 +35,23 @@ class InstrumentationCompat(
     }
 
     override fun newActivity(cl: ClassLoader?, className: String?, intent: Intent?): Activity {
-        if (cl != hostClassLoader) {
-            val newActivity = super.newActivity(hostClassLoader, className, intent)
-            log("newActivity.", Throwable())
-            return newActivity
+        if (cl != hostClassLoader && cl !is PluginClassLoader) {
+            if (intent != null) {
+                intent.setExtrasClassLoader(cl)
+                val pluginName = intent.getStringExtra(PluginActivity.KEY_FROM_PLUGIN)
+                if (pluginName != null) {
+                    val plugin = StablePlugin.findPluginByName(pluginName)
+                    if (plugin != null) {
+                        try {
+                            // 如果该 Activity 在宿主和插件中都有，则优先从插件 classloader 加载
+                            return super.newActivity(plugin.classLoader, className, intent)
+                        } catch (_: ClassNotFoundException) {
+                            // 说明该 Activity 在启动方插件中不存在
+                        }
+                    }
+                }
+            }
+            return super.newActivity(hostClassLoader, className, intent)
         }
         return super.newActivity(cl, className, intent)
     }
@@ -52,12 +66,6 @@ class InstrumentationCompat(
             field.isAccessible = true
             field.set(this, field.get(org))
             Log.d(TAG, "replace field: ${field.name}")
-        }
-    }
-
-    private fun log(msg: String, t: Throwable? = null) {
-        if (StablePlugin.config.isDebugEnable) {
-            Log.d(TAG, msg, t)
         }
     }
 

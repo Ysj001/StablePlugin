@@ -60,8 +60,4 @@ abstract class PluginAppCompatActivity : AppCompatActivity() {
         return baseContext.resources
     }
 
-    override fun startActivity(intent: Intent?) {
-        super.startActivity(intent)
-    }
-
 }

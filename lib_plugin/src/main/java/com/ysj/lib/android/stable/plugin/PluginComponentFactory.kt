@@ -12,6 +12,7 @@ import androidx.annotation.Keep
 import androidx.annotation.RequiresApi
 import androidx.core.app.CoreComponentFactory
 import androidx.core.content.IntentCompat
+import com.ysj.lib.android.stable.plugin.component.activity.PluginActivity
 import com.ysj.lib.android.stable.plugin.loader.PluginHostClassLoader
 
 /**
@@ -66,6 +67,21 @@ internal class PluginComponentFactory : CoreComponentFactory() {
                     "not found target activity."
                 }
                 return super.instantiateActivity(cl, component.className, wrapped)
+            }
+        }
+        if (intent != null) {
+            intent.setExtrasClassLoader(cl)
+            val pluginName = intent.getStringExtra(PluginActivity.KEY_FROM_PLUGIN)
+            if (pluginName != null) {
+                val plugin = StablePlugin.findPluginByName(pluginName)
+                if (plugin != null) {
+                    try {
+                        // 如果该 Activity 在宿主和插件中都有，则优先从插件 classloader 加载
+                        return super.instantiateActivity(plugin.classLoader, className, intent)
+                    } catch (_: ClassNotFoundException) {
+                        // 说明该 Activity 在启动方插件中不存在
+                    }
+                }
             }
         }
         return super.instantiateActivity(cl, className, intent)

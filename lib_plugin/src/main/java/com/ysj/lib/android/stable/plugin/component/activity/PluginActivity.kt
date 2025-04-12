@@ -18,7 +18,7 @@ import com.ysj.lib.android.stable.plugin.StablePlugin
 internal abstract class PluginActivity : Activity() {
 
     companion object {
-        internal const val KEY_FROM_PLUGIN = "KEY_FROM_PLUGIN"
+        internal const val KEY_FROM_PLUGIN_PREFIX = "KEY_FROM_PLUGIN_"
     }
 
     override fun attachBaseContext(newBase: Context) {
@@ -60,7 +60,7 @@ internal abstract class PluginActivity : Activity() {
     override fun startActivityForResult(intent: Intent?, requestCode: Int, options: Bundle?) {
         val plugin = StablePlugin.findPluginByClassLoader(classLoader)
         if (plugin != null && intent != null) {
-            intent.putExtra(KEY_FROM_PLUGIN, plugin.name)
+            intent.putExtra("${KEY_FROM_PLUGIN_PREFIX}${plugin.name}", false)
         }
         super.startActivityForResult(intent, requestCode, options)
     }

@@ -36,19 +36,18 @@ class InstrumentationCompat(
 
     override fun newActivity(cl: ClassLoader?, className: String?, intent: Intent?): Activity {
         if (cl != hostClassLoader && cl !is PluginClassLoader) {
-            if (intent != null) {
-                intent.setExtrasClassLoader(cl)
-                val pluginName = intent.getStringExtra(PluginActivity.KEY_FROM_PLUGIN)
-                if (pluginName != null) {
-                    val plugin = StablePlugin.findPluginByName(pluginName)
-                    if (plugin != null) {
-                        try {
-                            // 如果该 Activity 在宿主和插件中都有，则优先从插件 classloader 加载
-                            return super.newActivity(plugin.classLoader, className, intent)
-                        } catch (_: ClassNotFoundException) {
-                            // 说明该 Activity 在启动方插件中不存在
-                        }
-                    }
+            val extras = intent?.extras ?: return super.newActivity(hostClassLoader, className, intent)
+            val pluginName = extras.keySet()
+                .find { it.startsWith(PluginActivity.KEY_FROM_PLUGIN_PREFIX) }
+                ?.substring(PluginActivity.KEY_FROM_PLUGIN_PREFIX.length)
+                ?: return super.newActivity(hostClassLoader, className, intent)
+            val plugin = StablePlugin.findPluginByName(pluginName)
+            if (plugin != null) {
+                try {
+                    // 如果该 Activity 在宿主和插件中都有，则优先从插件 classloader 加载
+                    return super.newActivity(plugin.classLoader, className, intent)
+                } catch (_: ClassNotFoundException) {
+                    // 说明该 Activity 在启动方插件中不存在
                 }
             }
             return super.newActivity(hostClassLoader, className, intent)

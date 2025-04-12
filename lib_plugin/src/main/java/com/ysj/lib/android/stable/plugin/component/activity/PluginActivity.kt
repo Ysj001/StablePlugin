@@ -41,6 +41,7 @@ internal abstract class PluginActivity : Activity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        savedInstanceState?.classLoader = classLoader
         intent.setExtrasClassLoader(classLoader)
         super.onCreate(savedInstanceState)
     }

@@ -35,7 +35,8 @@ class Demo1TestActivity : AppCompatActivity() {
         }
         vb.btnInstallPlugin.setOnClickListener {
             lifecycleScope.launchSafety {
-                StablePlugin.installPlugin("demo_plugin1", File(MainApplication.pluginFileStorageDir, "demo_plugin1.apk"))
+                StablePlugin.installReleasedPlugin("demo_plugin1")
+                    ?: StablePlugin.installPlugin("demo_plugin1", File(MainApplication.pluginFileStorageDir, "demo_plugin1.apk"))
                 demo1Component.setPluginFileStorageDir(MainApplication.pluginFileStorageDir)
             }.invokeOnCompletion {
                 if (it == null || it is CancellationException) {

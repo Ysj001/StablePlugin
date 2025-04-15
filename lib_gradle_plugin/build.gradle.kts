@@ -8,7 +8,7 @@ group = properties["lib.group"] as String
 version = properties["lib.version"] as String
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
 }
 

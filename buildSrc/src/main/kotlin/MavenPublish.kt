@@ -5,7 +5,6 @@ import org.gradle.api.artifacts.dsl.RepositoryHandler
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
-import org.gradle.authentication.http.BasicAuthentication
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.get
@@ -34,8 +33,8 @@ fun Project.mavenPublish(groupId: String? = null, version: String? = null) {
     val pomDesc = properties["POM_DESCRIPTION"] as String
     val pomAftId = properties["POM_ARTIFACT_ID"] as String
     val pomPkgType = properties["POM_PACKAGING"] as String
-    val pomGroupId = groupId ?: properties["POM_GROUP_ID"] as String
-    val pomVersion = version ?: properties["POM_VERSION"] as String
+    val pomGroupId = groupId ?: this.group as String
+    val pomVersion = version ?: this.version as String
     val pomUrl = properties["POM_URL"] as String
     // 添加打包源码的任务，这样方便查看 lib 的源码
     if (pomPkgType == "aar") {

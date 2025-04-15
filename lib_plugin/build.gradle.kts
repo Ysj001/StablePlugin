@@ -3,6 +3,9 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
+group = properties["lib.group"] as String
+version = properties["lib.version"] as String
+
 android {
     namespace = "com.ysj.lib.android.stable.plugin"
     compileSdk = 34
@@ -25,7 +28,7 @@ android {
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
         jvmTarget = "11"
@@ -40,4 +43,4 @@ dependencies {
     compileOnly("androidx.appcompat:appcompat:1.7.0")
 }
 
-mavenPublish(version = properties["lib.version"] as String)
+mavenPublish()

@@ -4,8 +4,11 @@ plugins {
     id("kotlin")
 }
 
+group = properties["lib.group"] as String
+version = properties["lib.version"] as String
+
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_17
 }
 
@@ -24,4 +27,4 @@ dependencies {
     compileOnly("com.android.tools.build:gradle-api:$ANDROID_GRADLE_VERSION")
 }
 
-mavenPublish(version = properties["lib.version"] as String)
+mavenPublish()

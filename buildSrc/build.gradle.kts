@@ -25,7 +25,8 @@ dependencies {
         isDirectory && !list().isNullOrEmpty()
     }
     if (hasPlugin) {
+        val libGroup = properties["lib.group"] as String
         val libVersion = properties["lib.version"] as String
-        implementation("com.ysj.lib.android:stable-plugin-gradle:$libVersion")
+        implementation("$libGroup:stable-plugin-gradle:$libVersion")
     }
 }

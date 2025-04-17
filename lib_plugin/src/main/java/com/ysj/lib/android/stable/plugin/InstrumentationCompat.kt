@@ -5,8 +5,10 @@ import android.app.Application
 import android.app.Instrumentation
 import android.content.Context
 import android.content.Intent
+import android.os.Bundle
 import android.util.Log
 import com.ysj.lib.android.stable.plugin.component.activity.PluginActivity
+import com.ysj.lib.android.stable.plugin.component.activity.PluginExceptionHandlerActivity
 import com.ysj.lib.android.stable.plugin.loader.PluginClassLoader
 import java.lang.reflect.Modifier
 
@@ -34,9 +36,34 @@ class InstrumentationCompat(
         }
     }
 
+    override fun callActivityOnCreate(activity: Activity, icicle: Bundle?) {
+        try {
+            super.callActivityOnCreate(activity, icicle)
+        } catch (e: Exception) {
+            val activityClazz = StablePlugin.config.exceptionHandlerActivity
+            if (activityClazz == null) {
+                throw e
+            } else {
+                try {
+                    val intent = Intent(activity, activityClazz)
+                    PluginExceptionHandlerActivity.applyReason(
+                        intent,
+                        PluginExceptionHandlerActivity.FROM_ACTIVITY_ON_CREATE,
+                        e,
+                    )
+                    activity.startActivity(intent)
+                    activity.finish()
+                } catch (_: Exception) {
+                    throw e
+                }
+            }
+        }
+    }
+
     override fun newActivity(cl: ClassLoader?, className: String?, intent: Intent?): Activity {
         if (cl != hostClassLoader && cl !is PluginClassLoader) {
-            val extras = intent?.extras ?: return super.newActivity(hostClassLoader, className, intent)
+            val extras = intent?.extras
+                ?: return super.newActivity(hostClassLoader, className, intent)
             val pluginName = extras.keySet()
                 .find { it.startsWith(PluginActivity.KEY_FROM_PLUGIN_PREFIX) }
                 ?.substring(PluginActivity.KEY_FROM_PLUGIN_PREFIX.length)
@@ -48,11 +75,39 @@ class InstrumentationCompat(
                     return super.newActivity(plugin.classLoader, className, intent)
                 } catch (_: ClassNotFoundException) {
                     // 说明该 Activity 在启动方插件中不存在
+                } catch (e: Exception) {
+                    return tryNewActivity(e, intent)
                 }
             }
-            return super.newActivity(hostClassLoader, className, intent)
+            return try {
+                super.newActivity(hostClassLoader, className, intent)
+            } catch (e: Exception) {
+                tryNewActivity(e, intent)
+            }
         }
-        return super.newActivity(cl, className, intent)
+        return try {
+            super.newActivity(cl, className, intent)
+        } catch (e: Exception) {
+            return tryNewActivity(e, intent)
+        }
+    }
+
+    private fun tryNewActivity(e: Exception, intent: Intent?): Activity {
+        val activityClazz = StablePlugin.config.exceptionHandlerActivity
+        if (activityClazz == null || intent == null) {
+            throw e
+        } else {
+            try {
+                PluginExceptionHandlerActivity.applyReason(
+                    intent,
+                    PluginExceptionHandlerActivity.FROM_ACTIVITY_NEW,
+                    e,
+                )
+                return activityClazz.getDeclaredConstructor().newInstance()
+            } catch (_: Exception) {
+                throw e
+            }
+        }
     }
 
     fun init(org: Instrumentation) {

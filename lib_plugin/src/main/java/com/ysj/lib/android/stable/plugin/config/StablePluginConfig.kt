@@ -1,5 +1,6 @@
 package com.ysj.lib.android.stable.plugin.config
 
+import android.app.Activity
 import com.ysj.lib.android.stable.plugin.StablePlugin
 
 /**
@@ -16,6 +17,8 @@ class StablePluginConfig private constructor(builder: Builder) {
 
     internal val pluginClassLoadHook = builder.pluginClassLoadHook
 
+    internal val exceptionHandlerActivity = builder.exceptionHandlerActivity
+
     class Builder {
 
         internal var isDebugEnable = false
@@ -23,6 +26,8 @@ class StablePluginConfig private constructor(builder: Builder) {
         internal var eventCallback: EventCallback? = null
 
         internal var pluginClassLoadHook: PluginClassLoadHook? = null
+
+        internal var exceptionHandlerActivity: Class<out Activity>? = null
 
         fun debugEnable(enable: Boolean) = apply {
             this.isDebugEnable = enable
@@ -34,6 +39,10 @@ class StablePluginConfig private constructor(builder: Builder) {
 
         fun pluginClassLoadHook(filter: PluginClassLoadHook) = apply {
             this.pluginClassLoadHook = filter
+        }
+
+        fun exceptionHandlerActivity(clazz: Class<out Activity>) = apply {
+            this.exceptionHandlerActivity = clazz
         }
 
         fun build(): StablePluginConfig {

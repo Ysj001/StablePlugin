@@ -70,12 +70,14 @@ internal class PluginComponentFactory : CoreComponentFactory() {
                 return super.instantiateActivity(cl, component.className, wrapped)
             }
         }
-        val extras = intent?.extras ?: return super.instantiateActivity(cl, className, intent)
-        val pluginName = extras.keySet()
-            .find { it.startsWith(PluginActivity.KEY_FROM_PLUGIN_PREFIX) }
+        if (intent == null) {
+            return super.instantiateActivity(cl, className, null)
+        }
+        val pluginName = intent.extras
+            ?.keySet()
+            ?.find { it.startsWith(PluginActivity.KEY_FROM_PLUGIN_PREFIX) }
             ?.substring(PluginActivity.KEY_FROM_PLUGIN_PREFIX.length)
-            ?: return super.instantiateActivity(cl, className, intent)
-        val plugin = StablePlugin.findPluginByName(pluginName)
+        val plugin = if (pluginName == null) null else StablePlugin.findPluginByName(pluginName)
         if (plugin != null) {
             try {
                 // 如果该 Activity 在宿主和插件中都有，则优先从插件 classloader 加载

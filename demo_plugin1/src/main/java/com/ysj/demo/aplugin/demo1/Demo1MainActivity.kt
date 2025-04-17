@@ -34,20 +34,6 @@ class Demo1MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(vb.root)
-        vb.btnReInit.setOnClickListener {
-            // 演示在插件内部热更新插件
-            lifecycleScope.launchSafety {
-                StablePlugin.uninstallPlugin("demo_plugin1")
-                StablePlugin.installPlugin("demo_plugin1", File(pluginFileStorageDir, "demo_plugin1.apk"))
-                recreate()
-                Toast.makeText(this@Demo1MainActivity, "更新成功", Toast.LENGTH_SHORT).show()
-            }.invokeOnCompletion {
-                if (it == null || it is CancellationException) {
-                    return@invokeOnCompletion
-                }
-                Toast.makeText(this, "更新失败. $it", Toast.LENGTH_SHORT).show()
-            }
-        }
         vb.btnToActivity1.setOnClickListener {
             startActivity(Intent(this, Activity1::class.java))
         }

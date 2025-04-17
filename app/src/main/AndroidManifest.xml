@@ -30,6 +30,10 @@
             android:name=".Demo2TestActivity"
             android:exported="false"
             android:label="TestDemo2" />
+        <activity
+            android:name=".PluginExceptionHandlerImplActivity"
+            android:exported="false"
+            android:label="ExceptionHandler" />
     </application>
 
 </manifest>

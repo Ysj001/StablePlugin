@@ -51,6 +51,9 @@ class Demo1MainActivity : AppCompatActivity() {
         vb.btnToActivity1.setOnClickListener {
             startActivity(Intent(this, Activity1::class.java))
         }
+        vb.btnToExceptionTest.setOnClickListener {
+            startActivity(Intent(this, ExceptionTestActivity::class.java))
+        }
         vb.btnTestDemo1Provider.setOnClickListener {
             val uri = Uri.Builder()
                 .scheme(ContentResolver.SCHEME_CONTENT)

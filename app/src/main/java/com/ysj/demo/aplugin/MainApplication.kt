@@ -39,6 +39,7 @@ class MainApplication : Application() {
             .debugEnable(true)
             .eventCallback(pluginEventCallback)
             .pluginClassLoadHook(PluginClassLoadHookImpl())
+            .exceptionHandlerActivity(PluginExceptionHandlerImplActivity::class.java)
             .build()
         StablePlugin.init(this, config)
         PluginApiProxy.init(this)

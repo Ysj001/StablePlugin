@@ -2,10 +2,10 @@ package com.ysj.lib.android.stable.plugin.component.activity
 
 import android.content.Context
 import android.content.ContextWrapper
-import android.content.Intent
 import android.content.res.AssetManager
 import android.content.res.Resources
 import android.os.Bundle
+import android.view.LayoutInflater
 import androidx.appcompat.app.AppCompatActivity
 
 /**
@@ -46,6 +46,7 @@ abstract class PluginAppCompatActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         savedInstanceState?.classLoader = classLoader
         intent.setExtrasClassLoader(classLoader)
+        applyAppCompatFactoryCompat()
         super.onCreate(savedInstanceState)
     }
 
@@ -59,6 +60,19 @@ abstract class PluginAppCompatActivity : AppCompatActivity() {
 
     override fun getResources(): Resources {
         return baseContext.resources
+    }
+
+    private fun applyAppCompatFactoryCompat() {
+        /*
+            这里要设置 Factory2 是因为 AppCompatDelegateImpl 中 installViewFactory 会先判断
+            当前 LayoutInflater 的 Factory 有没有设置，如果设置了就不会在设置自己的了
+            会导致 xml 中 xxxCompat 相关属性用不了
+            （目前在 appcompat:1.7.0 中发现该问题）
+         */
+        val delegate = this.delegate
+        if (delegate is LayoutInflater.Factory2) {
+            layoutInflater.factory2 = delegate
+        }
     }
 
 }

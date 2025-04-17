@@ -76,20 +76,16 @@ object StablePlugin {
                 .apply { isAccessible = true }
                 .set(mPackageInfo, classLoader)
             Thread.currentThread().contextClassLoader = classLoader
-            try {
-                // hook 替换 Instrumentation（仅用于兼容低版本插件热更新，失败无所谓）
-                val activityThread = Class.forName("android.app.ActivityThread")
-                    .getDeclaredMethod("currentActivityThread")
-                    .invoke(null)
-                val instrumentationField = Class.forName("android.app.ActivityThread")
-                    .getDeclaredField("mInstrumentation")
-                    .apply { isAccessible = true }
-                val instrumentation = InstrumentationCompat(classLoader)
-                instrumentation.init(instrumentationField.get(activityThread) as Instrumentation)
-                instrumentationField.set(activityThread, instrumentation)
-            } catch (e: Exception) {
-                Log.i(TAG, "instrumentation hook failure.(unimportance)", e)
-            }
+            // hook 替换 Instrumentation
+            val activityThread = Class.forName("android.app.ActivityThread")
+                .getDeclaredMethod("currentActivityThread")
+                .invoke(null)
+            val instrumentationField = Class.forName("android.app.ActivityThread")
+                .getDeclaredField("mInstrumentation")
+                .apply { isAccessible = true }
+            val instrumentation = InstrumentationCompat(classLoader)
+            instrumentation.init(instrumentationField.get(activityThread) as Instrumentation)
+            instrumentationField.set(activityThread, instrumentation)
             Log.i(TAG, "init from hook. sdk-version=${Build.VERSION.SDK_INT}")
         }
         this.config = config

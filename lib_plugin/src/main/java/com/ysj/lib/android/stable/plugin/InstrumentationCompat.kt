@@ -54,10 +54,12 @@ class InstrumentationCompat(
         if (intent == null) {
             return super.newActivity(hostClassLoader, className, null)
         }
+        intent.setExtrasClassLoader(cl)
         val pluginName = intent.extras
             ?.keySet()
             ?.find { it.startsWith(PluginActivity.KEY_FROM_PLUGIN_PREFIX) }
             ?.substring(PluginActivity.KEY_FROM_PLUGIN_PREFIX.length)
+        intent.setExtrasClassLoader(null)
         val plugin = if (pluginName == null) null else StablePlugin.findPluginByName(pluginName)
         if (plugin != null) {
             try {

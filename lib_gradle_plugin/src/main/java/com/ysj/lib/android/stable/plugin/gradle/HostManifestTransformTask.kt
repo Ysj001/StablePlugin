@@ -98,7 +98,7 @@ abstract class HostManifestTransformTask : DefaultTask() {
                 .firstOrNull()
                 ?: continue
             pluginApplicationNode as Node
-            processMetadata(hostApplicationNode, pluginApplicationNode)
+//            processMetadata(hostApplicationNode, pluginApplicationNode)
             processActivity(hostApplicationNode, pluginApplicationNode)
             processActivityAlias(hostApplicationNode, pluginApplicationNode)
             processService(hostApplicationNode, pluginApplicationNode)

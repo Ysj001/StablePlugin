@@ -45,6 +45,8 @@ class ChildModifier(
         private const val PLUGIN_ACTIVITY_APP_COMPAT_CLASS_NAME = "$SDK_PACKAGE_NAME/component/activity/PluginAppCompatActivity"
         // ===================================
 
+        private const val PLUGIN_ACTIVITY_COMPAT_CLASS_NAME = "$SDK_PACKAGE_NAME/component/activity/PluginActivityCompat"
+
         private const val CONTENT_RESOLVER_PROXY_CLASS_NAME = "$SDK_PACKAGE_NAME/component/provider/PluginContentResolverProxy"
 
         private const val INITIALIZATION_PROVIDER_CLASS_NAME = "androidx/startup/InitializationProvider"
@@ -119,6 +121,7 @@ class ChildModifier(
                 for (methodNode in classNode.methods) {
                     synchronized(methodNode) {
                         for (node in methodNode.instructions.toList()) {
+                            pluginActivityCompat(classNode, methodNode, node)
                             initializationProviderCompat(classNode, methodNode, node)
                             proxyContentResolverInvoke(contentResolverProxyMethodMap, node)
                         }
@@ -128,6 +131,23 @@ class ChildModifier(
         }
         latch.await()
         throwable.get()?.also { throw it }
+    }
+
+    private fun pluginActivityCompat(classNode: ClassNode, methodNode: MethodNode, node: AbstractInsnNode) {
+        if (node !is MethodInsnNode || !node.owner.isTargetClass(ACTIVITY_CLASS_NAME)) {
+            return
+        }
+        when (node.name) {
+            "getApplication" -> {
+                if (node.desc != "()Landroid/app/Application;") {
+                    return
+                }
+                logger.info("compatible Activity.getApplication call. in ${classNode.name}-${methodNode.name}")
+                node.opcode = Opcodes.INVOKESTATIC
+                node.owner = PLUGIN_ACTIVITY_COMPAT_CLASS_NAME
+                node.desc = "(Landroid/app/Activity;)Landroid/app/Application;"
+            }
+        }
     }
 
     private fun initializationProviderCompat(classNode: ClassNode, methodNode: MethodNode, node: AbstractInsnNode) {
@@ -160,6 +180,13 @@ class ChildModifier(
         node.opcode = Opcodes.INVOKESTATIC
         node.owner = CONTENT_RESOLVER_PROXY_CLASS_NAME
         node.desc = desc
+    }
+
+    private fun String.isTargetClass(targetClassName: String): Boolean {
+        if (this == targetClassName) {
+            return true
+        }
+        return allClassNode[this]?.superName?.isTargetClass(targetClassName) ?: false
     }
 
     private fun changeSuperClass(classNode: ClassNode, targetSuper: String) {

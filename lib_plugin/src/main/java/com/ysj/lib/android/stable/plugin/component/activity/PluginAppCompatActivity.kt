@@ -2,6 +2,7 @@ package com.ysj.lib.android.stable.plugin.component.activity
 
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.Intent
 import android.content.res.AssetManager
 import android.content.res.Resources
 import android.os.Bundle
@@ -48,6 +49,11 @@ abstract class PluginAppCompatActivity : AppCompatActivity() {
         intent.setExtrasClassLoader(classLoader)
         applyAppCompatFactoryCompat()
         super.onCreate(savedInstanceState)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        data?.setExtrasClassLoader(classLoader)
+        super.onActivityResult(requestCode, resultCode, data)
     }
 
     override fun getClassLoader(): ClassLoader {

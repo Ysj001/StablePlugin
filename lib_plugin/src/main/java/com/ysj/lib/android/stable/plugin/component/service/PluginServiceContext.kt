@@ -10,11 +10,7 @@ import android.content.res.loader.ResourcesLoader
 import android.content.res.loader.ResourcesProvider
 import android.os.Build
 import android.os.ParcelFileDescriptor
-import android.util.AttributeSet
-import android.view.InflateException
 import android.view.LayoutInflater
-import android.view.View
-import androidx.fragment.app.FragmentContainerView
 import com.ysj.lib.android.stable.plugin.StablePlugin
 import com.ysj.lib.android.stable.plugin.StablePlugin.pluginInstalledFile
 import com.ysj.lib.android.stable.plugin.component.PluginViewFactoryCompat

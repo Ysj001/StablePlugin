@@ -168,10 +168,16 @@ object StablePlugin {
      * 卸载插件。
      */
     suspend fun uninstallPlugin(pluginName: String): Unit = withContext(Dispatchers.Main.immediate) {
-        val plugin = installedPluginMap.remove(pluginName) ?: return@withContext
+        val plugin = installedPluginMap.remove(pluginName)
+        if (plugin == null) {
+            withContext(Dispatchers.IO) {
+                pluginName.pluginInstallDir.runCatching { deleteRecursively() }
+            }
+            return@withContext
+        }
         pluginHostClassLoader.removePluginClassLoader(plugin.classLoader as PluginClassLoader)
         withContext(Dispatchers.IO) {
-            plugin.name.pluginInstallDir.runCatching { deleteRecursively() }
+            pluginName.pluginInstallDir.runCatching { deleteRecursively() }
         }
         config.eventCallback?.onPluginUninstalled(plugin)
     }
@@ -181,10 +187,14 @@ object StablePlugin {
      */
     @MainThread
     fun installReleasedPlugin(pluginName: String): Plugin? {
+        var plugin = installedPluginMap[pluginName]
+        if (plugin != null) {
+            return plugin
+        }
         if (!checkPluginReleased(pluginName)) {
             return null
         }
-        val plugin = runCatching { installPluginInternal(pluginName) }
+        plugin = runCatching { installPluginInternal(pluginName) }
             .getOrNull()
             ?: return null
         installedPluginMap[pluginName] = plugin

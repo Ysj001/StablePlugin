@@ -47,10 +47,10 @@ class ChildModifier(
 
         private const val PLUGIN_ACTIVITY_COMPAT_CLASS_NAME = "$SDK_PACKAGE_NAME/component/activity/PluginActivityCompat"
 
+        private const val PLUGIN_PACKAGE_MANAGER_COMPAT_CLASS_NAME = "$SDK_PACKAGE_NAME/component/PluginPackageManagerCompat"
+
         private const val CONTENT_RESOLVER_PROXY_CLASS_NAME = "$SDK_PACKAGE_NAME/component/provider/PluginContentResolverProxy"
 
-        private const val INITIALIZATION_PROVIDER_CLASS_NAME = "androidx/startup/InitializationProvider"
-        private const val INITIALIZATION_PROVIDER_COMPAT_CLASS_NAME = "com/ysj/lib/android/stable/plugin/component/provider/InitializationProviderCompat"
     }
 
     private val logger = YLogger.getLogger(javaClass)
@@ -61,10 +61,15 @@ class ChildModifier(
     private val activityAppCompatList = LinkedList<ClassNode>()
 
     private var contentResolverProxy: ClassNode? = null
+    private var pluginPackageManagerCompat: ClassNode? = null
 
     override fun scan(classNode: ClassNode) {
         if (classNode.name == CONTENT_RESOLVER_PROXY_CLASS_NAME) {
             contentResolverProxy = classNode
+            return
+        }
+        if (classNode.name == PLUGIN_PACKAGE_MANAGER_COMPAT_CLASS_NAME) {
+            pluginPackageManagerCompat = classNode
             return
         }
         if (classNode.name.startsWith(SDK_PACKAGE_NAME)) {
@@ -87,14 +92,8 @@ class ChildModifier(
     }
 
     override fun modify() {
-        val contentResolverProxy = requireNotNull(this.contentResolverProxy) {
-            "not found 'PluginContentResolverProxy' please check your dependencies."
-        }
-        val contentResolverProxyMethodMap = contentResolverProxy.methods
-            .asSequence()
-            .filter { it.access and Opcodes.ACC_STATIC != 0 }
-            .map { it.name + it.desc to it.desc }
-            .toMap(HashMap())
+        val packageManagerMethodMap = genPackageManagerMethodMap()
+        val contentResolverMethodMap = genContentResolverMethodMap()
         val latch = CountDownLatch(1 + allClassNode.size)
         val throwable = AtomicReference<Throwable>()
         // 修改组件的父类
@@ -122,8 +121,8 @@ class ChildModifier(
                     synchronized(methodNode) {
                         for (node in methodNode.instructions.toList()) {
                             pluginActivityCompat(classNode, methodNode, node)
-                            initializationProviderCompat(classNode, methodNode, node)
-                            proxyContentResolverInvoke(contentResolverProxyMethodMap, node)
+                            pluginPackageManagerCompat(packageManagerMethodMap, node)
+                            proxyContentResolverInvoke(contentResolverMethodMap, node)
                         }
                     }
                 }
@@ -150,23 +149,28 @@ class ChildModifier(
         }
     }
 
-    private fun initializationProviderCompat(classNode: ClassNode, methodNode: MethodNode, node: AbstractInsnNode) {
-        // 兼容 InitializationProvider
-        if (classNode.name != INITIALIZATION_PROVIDER_CLASS_NAME
-            || methodNode.name != "onCreate"
-            || node !is MethodInsnNode
-            || node.name != "discoverAndInitialize"
-            || node.desc != "()V") {
+    private fun pluginPackageManagerCompat(proxyMethodMap: Map<String, String>, node: AbstractInsnNode) {
+        if (node.opcode != Opcodes.INVOKEVIRTUAL || node !is MethodInsnNode) {
             return
         }
-        node.desc = "(Landroid/os/Bundle;)V"
-        methodNode.instructions.insertBefore(node, MethodInsnNode(
-            Opcodes.INVOKESTATIC,
-            INITIALIZATION_PROVIDER_COMPAT_CLASS_NAME,
-            "getInitializationProviderMetaData",
-            "()Landroid/os/Bundle;",
-        ))
-        logger.info("compatible InitializationProvider")
+        // 代理 PackageManager 的调用
+        val key = node.name + node.desc.replace("(", "(Landroid/content/pm/PackageManager;")
+        val desc = proxyMethodMap[key] ?: return
+        logger.info("compatible PackageManager call. ${node.owner} ${node.name} ${node.desc}")
+        node.opcode = Opcodes.INVOKESTATIC
+        node.owner = PLUGIN_PACKAGE_MANAGER_COMPAT_CLASS_NAME
+        node.desc = desc
+    }
+
+    private fun genPackageManagerMethodMap(): Map<String, String> {
+        val resolverProxy = requireNotNull(this.pluginPackageManagerCompat) {
+            "not found 'PluginPackageManagerCompat' please check your dependencies."
+        }
+        return resolverProxy.methods
+            .asSequence()
+            .filter { it.access and Opcodes.ACC_STATIC != 0 }
+            .map { it.name + it.desc to it.desc }
+            .toMap(HashMap(64))
     }
 
     private fun proxyContentResolverInvoke(contentResolverProxyMethodMap: Map<String, String>, node: AbstractInsnNode) {
@@ -180,6 +184,17 @@ class ChildModifier(
         node.opcode = Opcodes.INVOKESTATIC
         node.owner = CONTENT_RESOLVER_PROXY_CLASS_NAME
         node.desc = desc
+    }
+
+    private fun genContentResolverMethodMap(): Map<String, String> {
+        val resolverProxy = requireNotNull(this.contentResolverProxy) {
+            "not found 'PluginContentResolverProxy' please check your dependencies."
+        }
+        return resolverProxy.methods
+            .asSequence()
+            .filter { it.access and Opcodes.ACC_STATIC != 0 }
+            .map { it.name + it.desc to it.desc }
+            .toMap(HashMap(64))
     }
 
     private fun String.isTargetClass(targetClassName: String): Boolean {

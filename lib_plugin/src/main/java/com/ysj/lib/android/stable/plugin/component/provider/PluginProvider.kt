@@ -153,7 +153,7 @@ internal class PluginProvider : ContentProvider() {
 
     override fun openFile(uri: Uri, mode: String): ParcelFileDescriptor? {
         val unwrap = uri.unwrap
-            ?: return openFile(uri, mode)
+            ?: return super.openFile(uri, mode)
         return when (val contentInterface = findContentInterface(uri, unwrap)) {
             is ContentProvider -> contentInterface.openFile(unwrap, mode)
             is ContentResolver -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {

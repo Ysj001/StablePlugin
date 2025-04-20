@@ -10,10 +10,14 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.MainThread
 import androidx.collection.ArrayMap
+import androidx.collection.ArraySet
 import com.ysj.lib.android.stable.plugin.config.StablePluginConfig
 import com.ysj.lib.android.stable.plugin.loader.PluginClassLoader
 import com.ysj.lib.android.stable.plugin.loader.PluginHostClassLoader
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.job
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileNotFoundException
@@ -45,6 +49,8 @@ object StablePlugin {
     private lateinit var pluginHostClassLoader: PluginHostClassLoader
 
     private val installedPluginMap = ArrayMap<String, Plugin>()
+
+    private val releaseLockSet = ArraySet<String>()
 
     private val sdkRootDir get() = File(application.filesDir, "stable_plugin")
     internal val String.pluginInstallDir: File get() = File(sdkRootDir, this)
@@ -104,58 +110,18 @@ object StablePlugin {
     }
 
     /**
-     * 安装插件。
+     * 释放插件并安装。
      */
     suspend fun installPlugin(pluginName: String, pluginFile: File): Plugin {
         val installed = installedPluginMap[pluginName]
         if (installed != null) {
             return installed
         }
+        releasePlugin(pluginName, pluginFile)
         if (!pluginFile.isFile) {
             throw FileNotFoundException(pluginFile.absolutePath)
         }
-        val plugin = withContext(Dispatchers.IO) {
-            val pluginInstallDir = pluginName.pluginInstallDir
-            if (pluginInstallDir.isDirectory) {
-                pluginInstallDir.deleteRecursively()
-            }
-            pluginInstallDir.mkdirs()
-            pluginName.pluginODexDir.mkdirs()
-            pluginName.pluginSoLibDir.mkdirs()
-            ZipFile(pluginFile).use { jf ->
-                val soEntries = jf.entries()
-                    .asSequence()
-                    .filter { it.name.endsWith(".so") }
-                    .toList()
-                if (soEntries.isEmpty()) {
-                    return@use
-                }
-                val abiPrefixList = Build.SUPPORTED_ABIS.map { "lib/${it}" }
-                var resultAbiSoEntries: List<ZipEntry>? = null
-                for (abiPrefix in abiPrefixList) {
-                    resultAbiSoEntries = soEntries.filter { it.name.startsWith(abiPrefix) }
-                    if (resultAbiSoEntries.isNotEmpty()) {
-                        break
-                    }
-                }
-                if (resultAbiSoEntries.isNullOrEmpty()) {
-                    return@use
-                }
-                for (entry in resultAbiSoEntries) {
-                    val soFileName = entry.name.substringAfterLast("/")
-                    val soFile = File(pluginName.pluginSoLibDir, soFileName)
-                    soFile.createNewFile()
-                    soFile.outputStream().use { ops ->
-                        jf.getInputStream(entry).use { ips ->
-                            ips.copyTo(ops)
-                        }
-                    }
-                }
-            }
-            // 最后才复制插件 apk，确保到这步时插件已经处于可安装状态
-            pluginFile.copyTo(pluginName.pluginInstalledFile)
-            installPluginInternal(pluginName)
-        }
+        val plugin = parseReleasedPlugin(pluginName)
         withContext(Dispatchers.Main.immediate) {
             installedPluginMap[pluginName] = plugin
             pluginHostClassLoader.addPluginClassLoader(plugin.classLoader as PluginClassLoader)
@@ -169,17 +135,88 @@ object StablePlugin {
      */
     suspend fun uninstallPlugin(pluginName: String): Unit = withContext(Dispatchers.Main.immediate) {
         val plugin = installedPluginMap.remove(pluginName)
-        if (plugin == null) {
-            withContext(Dispatchers.IO) {
-                pluginName.pluginInstallDir.runCatching { deleteRecursively() }
-            }
-            return@withContext
+        if (plugin != null) {
+            pluginHostClassLoader.removePluginClassLoader(plugin.classLoader as PluginClassLoader)
         }
-        pluginHostClassLoader.removePluginClassLoader(plugin.classLoader as PluginClassLoader)
         withContext(Dispatchers.IO) {
+            while (isActive) {
+                val locked = synchronized(releaseLockSet) {
+                    pluginName in releaseLockSet
+                }
+                if (locked) {
+                    delay(50)
+                    continue
+                }
+                break
+            }
             pluginName.pluginInstallDir.runCatching { deleteRecursively() }
         }
-        config.eventCallback?.onPluginUninstalled(plugin)
+        if (plugin != null) {
+            config.eventCallback?.onPluginUninstalled(plugin)
+        }
+    }
+
+    /**
+     * 释放插件。
+     */
+    suspend fun releasePlugin(pluginName: String, pluginFile: File): Unit = withContext(Dispatchers.IO) {
+        coroutineContext.job.invokeOnCompletion {
+            synchronized(releaseLockSet) {
+                releaseLockSet.remove(pluginName)
+            }
+        }
+        while (isActive) {
+            val locked = synchronized(releaseLockSet) {
+                pluginName in releaseLockSet
+            }
+            if (locked) {
+                delay(50)
+                continue
+            }
+            break
+        }
+        synchronized(releaseLockSet) {
+            releaseLockSet.add(pluginName)
+        }
+        val pluginInstallDir = pluginName.pluginInstallDir
+        if (pluginInstallDir.isDirectory) {
+            pluginInstallDir.runCatching { deleteRecursively() }
+        }
+        pluginInstallDir.mkdirs()
+        pluginName.pluginODexDir.mkdirs()
+        pluginName.pluginSoLibDir.mkdirs()
+        ZipFile(pluginFile).use { jf ->
+            val soEntries = jf.entries()
+                .asSequence()
+                .filter { it.name.endsWith(".so") }
+                .toList()
+            if (soEntries.isEmpty()) {
+                return@use
+            }
+            val abiPrefixList = Build.SUPPORTED_ABIS.map { "lib/${it}" }
+            var resultAbiSoEntries: List<ZipEntry>? = null
+            for (abiPrefix in abiPrefixList) {
+                resultAbiSoEntries = soEntries.filter { it.name.startsWith(abiPrefix) }
+                if (resultAbiSoEntries.isNotEmpty()) {
+                    break
+                }
+            }
+            if (resultAbiSoEntries.isNullOrEmpty()) {
+                return@use
+            }
+            for (entry in resultAbiSoEntries) {
+                val soFileName = entry.name.substringAfterLast("/")
+                val soFile = File(pluginName.pluginSoLibDir, soFileName)
+                soFile.createNewFile()
+                soFile.outputStream().use { ops ->
+                    jf.getInputStream(entry).use { ips ->
+                        ips.copyTo(ops)
+                    }
+                }
+            }
+        }
+        // 最后才复制插件 apk，确保到这步时插件已经处于可安装状态
+        pluginFile.copyTo(pluginName.pluginInstalledFile)
     }
 
     /**
@@ -194,7 +231,7 @@ object StablePlugin {
         if (!checkPluginReleased(pluginName)) {
             return null
         }
-        plugin = runCatching { installPluginInternal(pluginName) }
+        plugin = runCatching { parseReleasedPlugin(pluginName) }
             .getOrNull()
             ?: return null
         installedPluginMap[pluginName] = plugin
@@ -212,11 +249,10 @@ object StablePlugin {
         if (plugin != null) {
             return plugin.packageInfo
         }
-        val pluginFile = pluginName.pluginInstalledFile
-        if (!pluginFile.isFile) {
+        if (!checkPluginReleased(pluginName)) {
             return null
         }
-        return runCatching { installPluginInternal(pluginName) }.getOrNull()?.packageInfo
+        return runCatching { parseReleasedPlugin(pluginName) }.getOrNull()?.packageInfo
     }
 
     /**
@@ -228,6 +264,11 @@ object StablePlugin {
     fun checkPluginReleased(pluginName: String): Boolean {
         if (checkPluginInstalled(pluginName)) {
             return true
+        }
+        synchronized(releaseLockSet) {
+            if (pluginName in releaseLockSet) {
+                return false
+            }
         }
         return pluginName.pluginInstalledFile.isFile
     }
@@ -260,7 +301,15 @@ object StablePlugin {
         }
     }
 
-    private fun installPluginInternal(pluginName: String): Plugin {
+    /**
+     * 获取所有已经安装的插件。
+     */
+    @MainThread
+    fun allInstalledPlugins(): Collection<Plugin> {
+        return installedPluginMap.values
+    }
+
+    private fun parseReleasedPlugin(pluginName: String): Plugin {
         val odexDir = pluginName.pluginODexDir
         val solibDir = pluginName.pluginSoLibDir
         val installedPluginFile = pluginName.pluginInstalledFile

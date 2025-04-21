@@ -6,8 +6,11 @@ import android.content.ContextWrapper
 import android.content.Intent
 import android.content.res.AssetManager
 import android.content.res.Resources
+import android.os.Build
 import android.os.Bundle
 import android.os.Parcel
+import android.util.Log
+import androidx.core.content.res.ResourcesCompat
 import com.ysj.lib.android.stable.plugin.Plugin
 import com.ysj.lib.android.stable.plugin.StablePlugin
 
@@ -24,6 +27,8 @@ internal abstract class PluginActivity : Activity() {
         private const val TAG = "PluginActivity"
 
         private const val KEY_FROM_PLUGIN_PREFIX = "KEY_FROM_PLUGIN_"
+
+        private var hostAppResTmp: Resources? = null
 
         fun findFromPlugin(cl: ClassLoader, bundle: Bundle?): Plugin? {
             bundle ?: return null
@@ -109,7 +114,61 @@ internal abstract class PluginActivity : Activity() {
         if (plugin != null && intent != null) {
             intent.putExtra("${KEY_FROM_PLUGIN_PREFIX}${plugin.name}", false)
         }
+        if (options != null) {
+            val enterId = options.getInt("android:activity.animEnterRes", ResourcesCompat.ID_NULL)
+            val exitId = options.getInt("android:activity.animExitRes", ResourcesCompat.ID_NULL)
+            try {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+                    if (enterId != ResourcesCompat.ID_NULL) {
+                        requireNotNull(obtainOnlyHostAppRes().getAnimation(enterId))
+                    }
+                    if (exitId != ResourcesCompat.ID_NULL) {
+                        requireNotNull(obtainOnlyHostAppRes().getAnimation(exitId))
+                    }
+                } else {
+                    if (enterId != ResourcesCompat.ID_NULL) {
+                        requireNotNull(application.resources.getAnimation(enterId))
+                    }
+                    if (exitId != ResourcesCompat.ID_NULL) {
+                        requireNotNull(application.resources.getAnimation(exitId))
+                    }
+                }
+            } catch (_: Exception) {
+                /*
+                    说明转场资源不在宿主中
+                    由于转场资源的解析在 AMS 中，无法解析到插件中的资源，
+                    会导致无转场效果甚至在部分低版本机型上会黑屏，
+                    因此这里兼容处理，不使用转场。
+                    你可以将该资源放到宿主中，并使用 public.xml 固定资源 id 来解决。
+                 */
+                Log.w(TAG, "load anim failure. try use public.xml fixed. enterId=0x${Integer.toHexString(enterId)} , exitId=0x${Integer.toHexString(exitId)}")
+                super.startActivityForResult(intent, requestCode, null)
+                return
+            }
+        }
         super.startActivityForResult(intent, requestCode, options)
+    }
+
+    private fun obtainOnlyHostAppRes(): Resources {
+        var resources = hostAppResTmp
+        if (resources != null) {
+            return resources
+        }
+        // 由于低版通过 package 查找时会复用 resource 和其中的 assets，
+        // 会导致 host 的 resource 会被添加插件的资源路径，因此这里重新创建独立的
+        val assetManagerClass = AssetManager::class.java
+        val assetManager = assetManagerClass
+            .getDeclaredConstructor()
+            .apply { isAccessible = true }
+            .newInstance()
+        assetManagerClass
+            .getMethod("addAssetPath", String::class.java)
+            .apply { isAccessible = true }
+            .invoke(assetManager, application.applicationInfo.sourceDir)
+        @Suppress("DEPRECATION")
+        resources = Resources(assetManager, this.resources.displayMetrics, this.resources.configuration)
+        hostAppResTmp = resources
+        return resources
     }
 
 }

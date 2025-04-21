@@ -5,6 +5,7 @@ import android.app.Instrumentation
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import androidx.annotation.Keep
 import com.ysj.lib.android.stable.plugin.component.activity.PluginActivity
 import com.ysj.lib.android.stable.plugin.component.activity.PluginExceptionHandlerActivity
 import java.lang.reflect.Modifier
@@ -15,6 +16,7 @@ import java.lang.reflect.Modifier
  * @author Ysj
  * Create time: 2024/12/9
  */
+@Keep
 class InstrumentationCompat(
     private val hostClassLoader: ClassLoader,
 ) : Instrumentation() {
@@ -54,13 +56,7 @@ class InstrumentationCompat(
         if (intent == null) {
             return super.newActivity(hostClassLoader, className, null)
         }
-        intent.setExtrasClassLoader(cl)
-        val pluginName = intent.extras
-            ?.keySet()
-            ?.find { it.startsWith(PluginActivity.KEY_FROM_PLUGIN_PREFIX) }
-            ?.substring(PluginActivity.KEY_FROM_PLUGIN_PREFIX.length)
-        intent.setExtrasClassLoader(null)
-        val plugin = if (pluginName == null) null else StablePlugin.findPluginByName(pluginName)
+        val plugin = PluginActivity.findFromPlugin(cl, intent.extras)
         if (plugin != null) {
             try {
                 // 如果该 Activity 在宿主和插件中都有，则优先从插件 classloader 加载

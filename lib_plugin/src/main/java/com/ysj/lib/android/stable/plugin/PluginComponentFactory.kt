@@ -73,13 +73,7 @@ internal class PluginComponentFactory : CoreComponentFactory() {
         if (intent == null) {
             return super.instantiateActivity(cl, className, null)
         }
-        intent.setExtrasClassLoader(cl)
-        val pluginName = intent.extras
-            ?.keySet()
-            ?.find { it.startsWith(PluginActivity.KEY_FROM_PLUGIN_PREFIX) }
-            ?.substring(PluginActivity.KEY_FROM_PLUGIN_PREFIX.length)
-        intent.setExtrasClassLoader(null)
-        val plugin = if (pluginName == null) null else StablePlugin.findPluginByName(pluginName)
+        val plugin = PluginActivity.findFromPlugin(cl, intent.extras)
         if (plugin != null) {
             try {
                 // 如果该 Activity 在宿主和插件中都有，则优先从插件 classloader 加载

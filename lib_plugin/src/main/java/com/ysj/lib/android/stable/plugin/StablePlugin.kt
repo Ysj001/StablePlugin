@@ -140,10 +140,7 @@ object StablePlugin {
         }
         withContext(Dispatchers.IO) {
             while (isActive) {
-                val locked = synchronized(releaseLockSet) {
-                    pluginName in releaseLockSet
-                }
-                if (locked) {
+                if (checkPluginReleasing(pluginName)) {
                     delay(50)
                     continue
                 }
@@ -166,10 +163,7 @@ object StablePlugin {
             }
         }
         while (isActive) {
-            val locked = synchronized(releaseLockSet) {
-                pluginName in releaseLockSet
-            }
-            if (locked) {
+            if (checkPluginReleasing(pluginName)) {
                 delay(50)
                 continue
             }
@@ -256,6 +250,15 @@ object StablePlugin {
     }
 
     /**
+     * 检查插件是否正在释放中。
+     */
+    fun checkPluginReleasing(pluginName: String): Boolean {
+        synchronized(releaseLockSet) {
+            return pluginName in releaseLockSet
+        }
+    }
+
+    /**
      * 检查插件是否已经在框架中释放。
      *
      * @return if released return true
@@ -265,10 +268,8 @@ object StablePlugin {
         if (checkPluginInstalled(pluginName)) {
             return true
         }
-        synchronized(releaseLockSet) {
-            if (pluginName in releaseLockSet) {
-                return false
-            }
+        if (checkPluginReleasing(pluginName)) {
+            return false
         }
         return pluginName.pluginInstalledFile.isFile
     }

@@ -20,7 +20,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.job
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.FileNotFoundException
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
@@ -118,9 +117,6 @@ object StablePlugin {
             return installed
         }
         releasePlugin(pluginName, pluginFile)
-        if (!pluginFile.isFile) {
-            throw FileNotFoundException(pluginFile.absolutePath)
-        }
         val plugin = parseReleasedPlugin(pluginName)
         withContext(Dispatchers.Main.immediate) {
             installedPluginMap[pluginName] = plugin

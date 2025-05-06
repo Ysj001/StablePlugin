@@ -106,6 +106,52 @@ internal abstract class PluginActivity : Activity() {
         return baseContext.resources
     }
 
+    override fun overrideActivityTransition(overrideType: Int, enterAnim: Int, exitAnim: Int, backgroundColor: Int) {
+        var realEnterAnim = enterAnim
+        var realExitAnim = exitAnim
+        if (enterAnim != ResourcesCompat.ID_NULL) {
+            try {
+                application.resources.getAnimation(enterAnim)
+            } catch (_: Exception) {
+                realEnterAnim = ResourcesCompat.ID_NULL
+                Log.w(TAG, "load anim failure. try use public.xml fixed. enterAnim=0x${Integer.toHexString(enterAnim)}}")
+            }
+        }
+        if (exitAnim != ResourcesCompat.ID_NULL) {
+            try {
+                application.resources.getAnimation(exitAnim)
+            } catch (_: Exception) {
+                realExitAnim = ResourcesCompat.ID_NULL
+                Log.w(TAG, "load anim failure. try use public.xml fixed. exitAnim=0x${Integer.toHexString(exitAnim)}}")
+            }
+        }
+        super.overrideActivityTransition(overrideType, realEnterAnim, realExitAnim, backgroundColor)
+    }
+
+    @Suppress("DEPRECATION")
+    @Deprecated("Deprecated in Java", ReplaceWith("super.overridePendingTransition(enterAnim, exitAnim, backgroundColor)", "android.app.Activity"))
+    override fun overridePendingTransition(enterAnim: Int, exitAnim: Int, backgroundColor: Int) {
+        var realEnterAnim = enterAnim
+        var realExitAnim = exitAnim
+        if (enterAnim != ResourcesCompat.ID_NULL) {
+            try {
+                application.resources.getAnimation(enterAnim)
+            } catch (_: Exception) {
+                realEnterAnim = ResourcesCompat.ID_NULL
+                Log.w(TAG, "load anim failure. try use public.xml fixed. enterAnim=0x${Integer.toHexString(enterAnim)}}")
+            }
+        }
+        if (exitAnim != ResourcesCompat.ID_NULL) {
+            try {
+                application.resources.getAnimation(exitAnim)
+            } catch (_: Exception) {
+                realExitAnim = ResourcesCompat.ID_NULL
+                Log.w(TAG, "load anim failure. try use public.xml fixed. exitAnim=0x${Integer.toHexString(exitAnim)}}")
+            }
+        }
+        super.overridePendingTransition(realEnterAnim, realExitAnim, backgroundColor)
+    }
+
     override fun startActivityForResult(intent: Intent?, requestCode: Int, options: Bundle?) {
         val plugin = StablePlugin.findPluginByClassLoader(classLoader)
         if (plugin != null && intent != null) {

@@ -1,10 +1,6 @@
 package com.ysj.lib.android.stable.plugin.component.activity
 
-import android.content.Context
-import android.content.ContextWrapper
 import android.content.Intent
-import android.content.res.AssetManager
-import android.content.res.Resources
 import android.os.Bundle
 import android.view.LayoutInflater
 import androidx.appcompat.app.AppCompatActivity
@@ -25,25 +21,6 @@ abstract class PluginAppCompatActivity : AppCompatActivity() {
         }
     }
 
-    override fun attachBaseContext(newBase: Context) {
-        val context = when (newBase) {
-            is PluginActivityContext -> newBase
-            is ContextWrapper -> {
-                var curr = newBase
-                while (curr is ContextWrapper && curr !is PluginActivityContext) {
-                    curr = curr.baseContext
-                }
-                if (curr is PluginActivityContext) {
-                    newBase
-                } else {
-                    PluginActivityContext(newBase, javaClass)
-                }
-            }
-            else -> PluginActivityContext(newBase, javaClass)
-        }
-        super.attachBaseContext(context)
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         savedInstanceState?.classLoader = classLoader
         intent.setExtrasClassLoader(classLoader)
@@ -54,18 +31,6 @@ abstract class PluginAppCompatActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         data?.setExtrasClassLoader(classLoader)
         super.onActivityResult(requestCode, resultCode, data)
-    }
-
-    override fun getClassLoader(): ClassLoader {
-        return baseContext.classLoader
-    }
-
-    override fun getAssets(): AssetManager {
-        return baseContext.resources.assets
-    }
-
-    override fun getResources(): Resources {
-        return baseContext.resources
     }
 
     private fun applyAppCompatFactoryCompat() {

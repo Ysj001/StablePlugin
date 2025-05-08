@@ -81,6 +81,9 @@ object StablePlugin {
                 .apply { isAccessible = true }
                 .set(mPackageInfo, classLoader)
             Thread.currentThread().contextClassLoader = classLoader
+            Log.i(TAG, "init from hook. sdk-version=${Build.VERSION.SDK_INT}")
+        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) @SuppressLint("PrivateApi") {
             // hook 替换 Instrumentation
             val activityThread = Class.forName("android.app.ActivityThread")
                 .getDeclaredMethod("currentActivityThread")
@@ -91,7 +94,7 @@ object StablePlugin {
             val instrumentation = InstrumentationCompat(classLoader)
             instrumentation.init(instrumentationField.get(activityThread) as Instrumentation)
             instrumentationField.set(activityThread, instrumentation)
-            Log.i(TAG, "init from hook. sdk-version=${Build.VERSION.SDK_INT}")
+            Log.i(TAG, "need hook Instrumentation. sdk-version=${Build.VERSION.SDK_INT}")
         }
         this.config = config
         this.application = application

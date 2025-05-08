@@ -25,6 +25,10 @@ class InstrumentationCompat(
         private const val TAG = "InstrumentationCompat"
     }
 
+    init {
+        Log.i(TAG, "init.")
+    }
+
     override fun callActivityOnCreate(activity: Activity, icicle: Bundle?) {
         try {
             super.callActivityOnCreate(activity, icicle)

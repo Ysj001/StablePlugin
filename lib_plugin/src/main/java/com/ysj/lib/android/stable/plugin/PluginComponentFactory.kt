@@ -46,6 +46,7 @@ internal class PluginComponentFactory : CoreComponentFactory() {
         Log.i(TAG, "init.")
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun instantiateClassLoader(cl: ClassLoader, aInfo: ApplicationInfo): ClassLoader {
         return PluginHostClassLoader(cl)
     }

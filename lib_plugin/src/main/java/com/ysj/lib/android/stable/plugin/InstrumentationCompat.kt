@@ -3,11 +3,14 @@ package com.ysj.lib.android.stable.plugin
 import android.app.Activity
 import android.app.Instrumentation
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.annotation.Keep
 import com.ysj.lib.android.stable.plugin.component.activity.PluginActivity
 import com.ysj.lib.android.stable.plugin.component.activity.PluginExceptionHandlerActivity
+import com.ysj.lib.android.stable.plugin.loader.PluginClassLoader
+import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 
 /**
@@ -17,7 +20,7 @@ import java.lang.reflect.Modifier
  * Create time: 2024/12/9
  */
 @Keep
-class InstrumentationCompat(
+internal class InstrumentationCompat(
     private val hostClassLoader: ClassLoader,
 ) : Instrumentation() {
 
@@ -30,6 +33,14 @@ class InstrumentationCompat(
     }
 
     override fun callActivityOnCreate(activity: Activity, icicle: Bundle?) {
+        if (activity.classLoader is PluginClassLoader) {
+            icicle?.classLoader = activity.classLoader
+            activity.intent.setExtrasClassLoader(activity.classLoader)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            super.callActivityOnCreate(activity, icicle)
+            return
+        }
         try {
             super.callActivityOnCreate(activity, icicle)
         } catch (e: Exception) {
@@ -54,6 +65,9 @@ class InstrumentationCompat(
     }
 
     override fun newActivity(cl: ClassLoader?, className: String?, intent: Intent?): Activity {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            return super.newActivity(cl, className, intent)
+        }
         if (cl != hostClassLoader) {
             return newActivity(hostClassLoader, className, intent)
         }
@@ -108,9 +122,14 @@ class InstrumentationCompat(
     }
 
     fun init(org: Instrumentation) {
-        val orgFields = org.javaClass.declaredFields
+        require(Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            "maximum sdk must be less than Q"
+        }
+        // 这里用元反射兼容 android P，否则在 P 上拿不到所有 field
+        val getDeclaredFieldsMethod = Class::class.java.getDeclaredMethod("getDeclaredFields")
+        val orgFields = getDeclaredFieldsMethod.invoke(org.javaClass) as Array<*>
         for (index in orgFields.indices) {
-            val field = orgFields[index]
+            val field = orgFields[index] as Field
             if (Modifier.isFinal(field.modifiers) && Modifier.isStatic(field.modifiers)) {
                 continue
             }

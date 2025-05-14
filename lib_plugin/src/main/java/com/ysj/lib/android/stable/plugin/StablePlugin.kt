@@ -12,6 +12,7 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.annotation.MainThread
+import androidx.annotation.RequiresApi
 import androidx.collection.ArrayMap
 import androidx.collection.ArraySet
 import androidx.core.content.edit
@@ -89,7 +90,7 @@ object StablePlugin {
             Thread.currentThread().contextClassLoader = classLoader
             Log.i(TAG, "init from hook. sdk-version=${Build.VERSION.SDK_INT}")
         }
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) @SuppressLint("PrivateApi") {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) @SuppressLint("PrivateApi") {
             // hook 替换 Instrumentation
             val activityThread = Class.forName("android.app.ActivityThread")
                 .getDeclaredMethod("currentActivityThread")
@@ -116,8 +117,10 @@ object StablePlugin {
         )
         config.eventCallback?.onInitialized()
         application.registerActivityLifecycleCallbacks(object : Application.ActivityLifecycleCallbacks {
+            @RequiresApi(Build.VERSION_CODES.Q)
             override fun onActivityPreCreated(activity: Activity, savedInstanceState: Bundle?) {
                 if (activity.classLoader is PluginClassLoader) {
+                    // 小于 Q 的版本在 InstrumentationCompat 的 callActivityOnCreate 中兼容了
                     savedInstanceState?.classLoader = activity.classLoader
                     activity.intent.setExtrasClassLoader(activity.classLoader)
                 }

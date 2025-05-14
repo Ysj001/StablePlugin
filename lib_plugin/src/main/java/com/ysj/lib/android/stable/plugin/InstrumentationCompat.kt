@@ -58,7 +58,14 @@ class InstrumentationCompat(
             return newActivity(hostClassLoader, className, intent)
         }
         if (intent == null) {
-            return super.newActivity(hostClassLoader, className, null)
+            try {
+                return super.newActivity(cl, className, null)
+            } catch (e: ClassNotFoundException) {
+                if (StablePlugin.recoverInstalledPlugins()) {
+                    return newActivity(cl, className, null)
+                }
+                throw e
+            }
         }
         val plugin = PluginActivity.findFromPlugin(cl, intent.extras)
         if (plugin != null) {
@@ -74,7 +81,11 @@ class InstrumentationCompat(
         return try {
             super.newActivity(cl, className, intent)
         } catch (e: Exception) {
-            return tryNewActivity(e, intent)
+            if (StablePlugin.recoverInstalledPlugins()) {
+                newActivity(cl, className, intent)
+            } else {
+                tryNewActivity(e, intent)
+            }
         }
     }
 

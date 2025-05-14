@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
 import android.app.Instrumentation
+import android.content.Context
 import android.content.ContextWrapper
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
@@ -13,6 +14,7 @@ import android.util.Log
 import androidx.annotation.MainThread
 import androidx.collection.ArrayMap
 import androidx.collection.ArraySet
+import androidx.core.content.edit
 import com.ysj.lib.android.stable.plugin.config.StablePluginConfig
 import com.ysj.lib.android.stable.plugin.loader.PluginClassLoader
 import com.ysj.lib.android.stable.plugin.loader.PluginHostClassLoader
@@ -39,6 +41,8 @@ object StablePlugin {
     internal const val INTENT_KEY_PLUGIN_WRAPPED = "plugin.wrapped"
 
     private const val TAG = "StablePlugin"
+
+    private const val SP_KEY_INSTALLED_PLUGINS = "SP_KEY_INSTALLED_PLUGINS"
 
     internal lateinit var config: StablePluginConfig
         private set
@@ -144,6 +148,7 @@ object StablePlugin {
             installedPluginMap[pluginName] = plugin
             pluginHostClassLoader.addPluginClassLoader(plugin.classLoader as PluginClassLoader)
             config.eventCallback?.onPluginInstalled(plugin)
+            recordInstalledPlugins()
         }
         return plugin
     }
@@ -168,6 +173,7 @@ object StablePlugin {
         }
         if (plugin != null) {
             config.eventCallback?.onPluginUninstalled(plugin)
+            recordInstalledPlugins()
         }
     }
 
@@ -249,6 +255,7 @@ object StablePlugin {
         installedPluginMap[pluginName] = plugin
         pluginHostClassLoader.addPluginClassLoader(plugin.classLoader as PluginClassLoader)
         config.eventCallback?.onPluginInstalled(plugin)
+        recordInstalledPlugins()
         return plugin
     }
 
@@ -326,6 +333,33 @@ object StablePlugin {
     @MainThread
     fun allInstalledPlugins(): Collection<Plugin> {
         return installedPluginMap.values
+    }
+
+    /**
+     * 恢复所有已安装的插件。
+     */
+    @MainThread
+    internal fun recoverInstalledPlugins(): Boolean {
+        val sp = application.getSharedPreferences("stable_plugin_recover", Context.MODE_PRIVATE)
+        val recoverSet = sp.getStringSet(SP_KEY_INSTALLED_PLUGINS, null) ?: return false
+        var count = 0
+        for (pluginName in recoverSet) {
+            if (!checkPluginReleased(pluginName)) {
+                continue
+            }
+            installReleasedPlugin(pluginName)
+            count++
+        }
+        return count > 0
+    }
+
+    @MainThread
+    private fun recordInstalledPlugins() {
+        val sp = application.getSharedPreferences("stable_plugin_recover", Context.MODE_PRIVATE)
+        val installedPlugins = allInstalledPlugins().asSequence().map { it.name }.toSet()
+        sp.edit {
+            putStringSet(SP_KEY_INSTALLED_PLUGINS, installedPlugins)
+        }
     }
 
     private fun parseReleasedPlugin(pluginName: String): Plugin {

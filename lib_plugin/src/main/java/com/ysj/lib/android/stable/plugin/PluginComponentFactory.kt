@@ -72,7 +72,14 @@ internal class PluginComponentFactory : CoreComponentFactory() {
             }
         }
         if (intent == null) {
-            return super.instantiateActivity(cl, className, null)
+            try {
+                return super.instantiateActivity(cl, className, null)
+            } catch (e: ClassNotFoundException) {
+                if (StablePlugin.recoverInstalledPlugins()) {
+                    return instantiateActivity(cl, className, null)
+                }
+                throw e
+            }
         }
         val plugin = PluginActivity.findFromPlugin(cl, intent.extras)
         if (plugin != null) {
@@ -88,7 +95,11 @@ internal class PluginComponentFactory : CoreComponentFactory() {
         return try {
             super.instantiateActivity(cl, className, intent)
         } catch (e: Exception) {
-            tryNewActivity(e, intent)
+            if (StablePlugin.recoverInstalledPlugins()) {
+                instantiateActivity(cl, className, intent)
+            } else {
+                tryNewActivity(e, intent)
+            }
         }
     }
 

@@ -1,12 +1,14 @@
 package com.ysj.lib.android.stable.plugin
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.Application
 import android.app.Instrumentation
 import android.content.ContextWrapper
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Bundle
 import android.util.Log
 import androidx.annotation.MainThread
 import androidx.collection.ArrayMap
@@ -109,6 +111,23 @@ object StablePlugin {
                 PackageManager.GET_META_DATA,
         )
         config.eventCallback?.onInitialized()
+        application.registerActivityLifecycleCallbacks(object : Application.ActivityLifecycleCallbacks {
+            override fun onActivityPreCreated(activity: Activity, savedInstanceState: Bundle?) {
+                if (activity.classLoader is PluginClassLoader) {
+                    savedInstanceState?.classLoader = activity.classLoader
+                    activity.intent.setExtrasClassLoader(activity.classLoader)
+                }
+                super.onActivityPreCreated(activity, savedInstanceState)
+            }
+
+            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit
+            override fun onActivityStarted(activity: Activity) = Unit
+            override fun onActivityResumed(activity: Activity) = Unit
+            override fun onActivityPaused(activity: Activity) = Unit
+            override fun onActivityStopped(activity: Activity) = Unit
+            override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
+            override fun onActivityDestroyed(activity: Activity) = Unit
+        })
     }
 
     /**

@@ -22,8 +22,6 @@ abstract class PluginAppCompatActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        savedInstanceState?.classLoader = classLoader
-        intent.setExtrasClassLoader(classLoader)
         applyAppCompatFactoryCompat()
         super.onCreate(savedInstanceState)
     }

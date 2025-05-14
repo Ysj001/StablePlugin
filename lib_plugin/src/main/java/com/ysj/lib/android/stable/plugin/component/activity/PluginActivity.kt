@@ -65,12 +65,6 @@ internal abstract class PluginActivity : Activity() {
         super.attachBaseContext(PluginActivityContext(newBase, javaClass))
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        savedInstanceState?.classLoader = classLoader
-        intent.setExtrasClassLoader(classLoader)
-        super.onCreate(savedInstanceState)
-    }
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         data?.setExtrasClassLoader(classLoader)
         super.onActivityResult(requestCode, resultCode, data)

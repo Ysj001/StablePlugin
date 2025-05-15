@@ -6,14 +6,9 @@ import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.res.AssetManager
 import android.content.res.Resources
-import android.content.res.loader.ResourcesLoader
-import android.content.res.loader.ResourcesProvider
-import android.os.Build
-import android.os.ParcelFileDescriptor
 import android.view.LayoutInflater
 import com.ysj.lib.android.stable.plugin.Plugin
 import com.ysj.lib.android.stable.plugin.StablePlugin
-import com.ysj.lib.android.stable.plugin.StablePlugin.pluginInstalledFile
 
 /**
  * 插件的 [Application]。
@@ -32,21 +27,7 @@ internal open class PluginApplication : Application() {
 
     public override fun attachBaseContext(base: Context) {
         super.attachBaseContext(base)
-        resources = base.packageManager.getResourcesForApplication(plugin.packageInfo.applicationInfo)
-        val pluginInstalledFile = plugin.name.pluginInstalledFile
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-            AssetManager::class.java
-                .getMethod("addAssetPath", String::class.java)
-                .apply { isAccessible = true }
-                .invoke(resources.assets, pluginInstalledFile.absolutePath)
-        } else {
-            val resourcesProvider = ParcelFileDescriptor
-                .open(pluginInstalledFile, ParcelFileDescriptor.MODE_READ_ONLY)
-                .use { ResourcesProvider.loadFromApk(it) }
-            val resourcesLoader = ResourcesLoader()
-            resourcesLoader.addProvider(resourcesProvider)
-            resources.addLoaders(resourcesLoader)
-        }
+        resources = PluginResourceCompat.getResourceFromPlugin(plugin, base)
     }
 
     override fun registerComponentCallbacks(callback: ComponentCallbacks?) {

@@ -2,6 +2,7 @@ package com.ysj.lib.android.stable.plugin
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.ActivityManager
 import android.app.Application
 import android.app.Instrumentation
 import android.content.Context
@@ -10,12 +11,14 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Process
 import android.util.Log
 import androidx.annotation.MainThread
 import androidx.annotation.RequiresApi
 import androidx.collection.ArrayMap
 import androidx.collection.ArraySet
 import androidx.core.content.edit
+import androidx.core.content.getSystemService
 import com.ysj.lib.android.stable.plugin.config.StablePluginConfig
 import com.ysj.lib.android.stable.plugin.loader.PluginClassLoader
 import com.ysj.lib.android.stable.plugin.loader.PluginHostClassLoader
@@ -116,6 +119,17 @@ object StablePlugin {
                 PackageManager.GET_META_DATA,
         )
         config.eventCallback?.onInitialized()
+        val processName = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            val am: ActivityManager = application.getSystemService()!!
+            val pid = Process.myPid()
+            am.runningAppProcesses.find { it.pid == pid }!!.processName
+        } else {
+            Process.myProcessName()
+        }
+        if (hostPackageInfo.applicationInfo.processName != processName) {
+            // 在其它进程中恢复已安装的插件
+            recoverInstalledPlugins()
+        }
         application.registerActivityLifecycleCallbacks(object : Application.ActivityLifecycleCallbacks {
             @RequiresApi(Build.VERSION_CODES.Q)
             override fun onActivityPreCreated(activity: Activity, savedInstanceState: Bundle?) {

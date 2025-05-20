@@ -14,9 +14,12 @@ bcu {
         )
     }
     filterNot { variant, entryName ->
-        !entryName.startsWith("com/ysj/demo")
-            && !entryName.startsWith("com/ysj/lib/android/stable/plugin")
-            && !entryName.startsWith("androidx")
+        entryName.startsWith("kotlin")
+            || entryName.startsWith("org")
+            || entryName.startsWith("okio")
+            || entryName.startsWith("okhttp")
+            || entryName.startsWith("retrofit")
+            || entryName.startsWith("net")
     }
 }
 

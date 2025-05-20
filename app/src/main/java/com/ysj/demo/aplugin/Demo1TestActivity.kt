@@ -30,14 +30,11 @@ class Demo1TestActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(vb.root)
-        if (StablePlugin.checkPluginInstalled("demo_plugin1")) {
-            demo1Component.setPluginFileStorageDir(MainApplication.pluginFileStorageDir)
-        }
         vb.btnInstallPlugin.setOnClickListener {
             lifecycleScope.launchSafety {
                 StablePlugin.installReleasedPlugin("demo_plugin1")
                     ?: StablePlugin.installPlugin("demo_plugin1", File(MainApplication.pluginFileStorageDir, "demo_plugin1.apk"))
-                demo1Component.setPluginFileStorageDir(MainApplication.pluginFileStorageDir)
+                Toast.makeText(this@Demo1TestActivity, "安装完成", Toast.LENGTH_SHORT).show()
             }.invokeOnCompletion {
                 if (it == null || it is CancellationException) {
                     return@invokeOnCompletion
@@ -48,6 +45,7 @@ class Demo1TestActivity : AppCompatActivity() {
         vb.btnUninstallPlugin.setOnClickListener {
             lifecycleScope.launchSafety {
                 StablePlugin.uninstallPlugin("demo_plugin1")
+                Toast.makeText(this@Demo1TestActivity, "卸载完成", Toast.LENGTH_SHORT).show()
             }.invokeOnCompletion {
                 if (it == null || it is CancellationException) {
                     return@invokeOnCompletion

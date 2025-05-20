@@ -15,8 +15,6 @@ interface Demo1Component {
 
     fun version(): String
 
-    fun setPluginFileStorageDir(dir: File)
-
     fun startMainActivity(context: Context)
 
     fun callService(context: Context, data: Demo1ServiceData)

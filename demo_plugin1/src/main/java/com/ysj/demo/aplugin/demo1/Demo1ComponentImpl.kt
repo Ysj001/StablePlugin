@@ -16,15 +16,8 @@ import java.io.File
 @ComponentImpl
 object Demo1ComponentImpl : Demo1Component {
 
-    lateinit var pluginFileStorageDir: File
-        private set
-
     override fun version(): String {
         return BuildConfig.VERSION_NAME
-    }
-
-    override fun setPluginFileStorageDir(dir: File) {
-        pluginFileStorageDir = dir
     }
 
     override fun startMainActivity(context: Context) {

@@ -7,7 +7,7 @@
     android:orientation="vertical">
 
     <TextView
-        android:id="@+id/tvTitle"
+        android:id="@android:id/title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="#000000"
@@ -15,7 +15,7 @@
         tools:text="title" />
 
     <TextView
-        android:id="@+id/tvContent"
+        android:id="@android:id/content"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="#000000"

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ========== demo_plugin1 ============ -->
+    <!-- Demo1Service -->
+    <public name="ic_service" id="0x7f070098" type="drawable" />
+    <public name="notification_common" id="0x7f0b0066" type="layout" />
+    <!-- ======================================-->
+</resources>

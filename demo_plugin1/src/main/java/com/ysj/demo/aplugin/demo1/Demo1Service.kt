@@ -1,6 +1,7 @@
 package com.ysj.demo.aplugin.demo1
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -63,6 +64,7 @@ class Demo1Service : Service() {
         Log.i(TAG, "onDestroy.")
     }
 
+    @SuppressLint("ResourceType")
     private fun notify(title: String, content: String) {
         val nm = NotificationManagerCompat.from(this)
         val channel = NotificationChannelCompat
@@ -71,17 +73,19 @@ class Demo1Service : Service() {
             .setSound(Uri.EMPTY, null)
             .build()
         nm.createNotificationChannel(channel)
-        val notificationView = RemoteViews(packageName, R.layout.notification_common)
-        notificationView.setTextViewText(R.id.tvTitle, title)
-        notificationView.setTextViewText(R.id.tvContent, content)
+        // 使用 RemoteViews 需要在主包配置 public.xml 并使用固定 id
+        val notificationView = RemoteViews(packageName, 0x7f0b0066)
+        notificationView.setTextViewText(android.R.id.title, title)
+        notificationView.setTextViewText(android.R.id.content, content)
         val notification = NotificationCompat
             .Builder(this, channel.id)
             .setOngoing(true)
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(0x7f070098)
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
             .setCustomContentView(notificationView)
             .build()
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            Log.w(TAG, "没有 notify 权限")
             return
         }
         nm.notify(NOTIFY_ID, notification)

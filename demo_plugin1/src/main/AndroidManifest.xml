@@ -32,7 +32,8 @@
         <activity
             android:name=".Activity1"
             android:exported="false"
-            android:launchMode="singleTop" />
+            android:launchMode="singleTop"
+            android:process=":demo1" />
 
         <!-- 演示对 ContentProvider 的支持 -->
         <provider

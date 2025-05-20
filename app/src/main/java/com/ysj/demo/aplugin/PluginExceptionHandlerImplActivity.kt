@@ -3,6 +3,8 @@ package com.ysj.demo.aplugin
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
+import android.widget.LinearLayout
+import android.widget.ScrollView
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.view.setPadding
 import com.ysj.lib.android.stable.plugin.component.activity.PluginExceptionHandlerActivity
@@ -21,9 +23,13 @@ class PluginExceptionHandlerImplActivity : PluginExceptionHandlerActivity() {
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(AppCompatTextView(this).also {
-            it.setPadding(16.dp.roundToInt())
-            it.text = "from=$from\nexception=\n${Log.getStackTraceString(exception)}"
+        setContentView(ScrollView(this).also { scrollView ->
+            scrollView.addView(LinearLayout(this).also { linearLayout ->
+                linearLayout.addView(AppCompatTextView(this).also { textView ->
+                    textView.setPadding(16.dp.roundToInt())
+                    textView.text = "from=$from\nexception=\n${Log.getStackTraceString(exception)}"
+                })
+            })
         })
     }
 

@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.view.GravityCompat
 import com.ysj.demo.aplugin.demo1.databinding.ActivityTest1Binding
 
@@ -33,7 +34,7 @@ class Activity1 : AppCompatActivity() {
             vb.root.openDrawer(GravityCompat.END)
         }
         vb.btnInfo.setOnClickListener {
-            recreate()
+            ActivityCompat.recreate(this)
         }
     }
 

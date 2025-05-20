@@ -30,7 +30,7 @@ class MainApplication : Application() {
 
     override fun attachBaseContext(base: Context?) {
         super.attachBaseContext(base)
-        pluginFileStorageDir = getExternalFilesDir(null) ?: filesDir
+        pluginFileStorageDir = filesDir
         if (!pluginFileStorageDir.isDirectory) {
             pluginFileStorageDir.mkdirs()
         }

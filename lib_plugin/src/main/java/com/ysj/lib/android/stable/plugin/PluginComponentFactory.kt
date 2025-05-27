@@ -3,7 +3,6 @@ package com.ysj.lib.android.stable.plugin
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AppComponentFactory
-import android.app.Application
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.os.Build
@@ -40,8 +39,6 @@ internal class PluginComponentFactory : CoreComponentFactory() {
         private const val TAG = "PluginComponentFactory"
     }
 
-    private lateinit var application: Application
-
     init {
         Log.i(TAG, "init.")
     }
@@ -49,12 +46,6 @@ internal class PluginComponentFactory : CoreComponentFactory() {
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun instantiateClassLoader(cl: ClassLoader, aInfo: ApplicationInfo): ClassLoader {
         return PluginHostClassLoader(cl)
-    }
-
-    override fun instantiateApplication(cl: ClassLoader, className: String): Application {
-        val instantiateApplication = super.instantiateApplication(cl, className)
-        this.application = instantiateApplication
-        return instantiateApplication
     }
 
     override fun instantiateActivity(cl: ClassLoader, className: String, intent: Intent?): Activity {

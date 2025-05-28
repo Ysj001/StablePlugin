@@ -7,6 +7,7 @@ import android.app.Application
 import android.app.Instrumentation
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.Build
@@ -80,7 +81,7 @@ object StablePlugin {
             while (baseContext is ContextWrapper) {
                 baseContext = baseContext.baseContext
             }
-            // hook LoadedApk 中的 mClassLoader
+            // hook 替换 LoadedApk 中的 mClassLoader
             val mPackageInfo = Class
                 .forName("android.app.ContextImpl")
                 .getDeclaredField("mPackageInfo")
@@ -91,6 +92,36 @@ object StablePlugin {
                 .apply { isAccessible = true }
                 .set(mPackageInfo, classLoader)
             Thread.currentThread().contextClassLoader = classLoader
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                /*
+                    正常情况不会进到这里，如果进了这里是 PluginComponentFactory 没能初始化
+                    虽然这里还是兼容了一下，但为了兼容性你应该排查业务问题。
+                    主要原因有：
+                    - 加固导致的（如360加固宝）
+                    - 上层在 manifest 中覆盖了插件的配的 appComponentFactory
+                 */
+                val activityThreadClass = Class.forName("android.app.ActivityThread")
+                val activityThread = activityThreadClass.getDeclaredMethod("currentActivityThread").invoke(null)
+                val getPackageInfoNoCheckMethod = activityThreadClass.getMethod(
+                    "getPackageInfoNoCheck",
+                    ApplicationInfo::class.java,
+                    Class.forName("android.content.res.CompatibilityInfo")
+                )
+                // 替换新旧 ApplicationInfo 即可刷新 LoadedApk
+                val newInfo = application.packageManager
+                    .getPackageArchiveInfo(application.applicationInfo.sourceDir, 0)
+                    ?.applicationInfo
+                    ?: throw RuntimeException("load app info failure.")
+                newInfo.appComponentFactory = PluginComponentFactory::class.java.name
+                newInfo.sourceDir = application.applicationInfo.sourceDir
+                newInfo.publicSourceDir = application.applicationInfo.publicSourceDir
+                newInfo.nativeLibraryDir = application.applicationInfo.nativeLibraryDir
+                val orgInfo = ApplicationInfo(application.applicationInfo)
+                orgInfo.appComponentFactory = PluginComponentFactory::class.java.name
+                getPackageInfoNoCheckMethod.invoke(activityThread, newInfo, null)
+                getPackageInfoNoCheckMethod.invoke(activityThread, orgInfo, null)
+                Log.w(TAG, "try support success. but please check your appComponentFactory install.")
+            }
             Log.i(TAG, "init from hook. sdk-version=${Build.VERSION.SDK_INT}")
         }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) @SuppressLint("PrivateApi") {

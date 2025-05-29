@@ -446,14 +446,8 @@ object StablePlugin {
                 Class.forName("android.content.res.CompatibilityInfo")
             )
             // 替换新旧 ApplicationInfo 即可刷新 LoadedApk
-            val newInfo = application.packageManager
-                .getPackageArchiveInfo(application.applicationInfo.sourceDir, 0)
-                ?.applicationInfo
-                ?: throw RuntimeException("load app info failure.")
-            newInfo.appComponentFactory = PluginComponentFactory::class.java.name
-            newInfo.sourceDir = application.applicationInfo.sourceDir
-            newInfo.publicSourceDir = application.applicationInfo.publicSourceDir
-            newInfo.nativeLibraryDir = application.applicationInfo.nativeLibraryDir
+            val newInfo = ApplicationInfo(application.applicationInfo)
+            ApplicationInfo::class.java.getField("resourceDirs").set(newInfo, arrayOf(application.filesDir.absolutePath))
             val orgInfo = ApplicationInfo(application.applicationInfo)
             orgInfo.appComponentFactory = PluginComponentFactory::class.java.name
             getPackageInfoNoCheckMethod.invoke(activityThread, newInfo, null)

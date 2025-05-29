@@ -392,6 +392,9 @@ object StablePlugin {
         val recoverSet = sp.getStringSet(SP_KEY_INSTALLED_PLUGINS, null) ?: return false
         var count = 0
         for (pluginName in recoverSet) {
+            if (checkPluginInstalled(pluginName)) {
+                continue
+            }
             if (!checkPluginReleased(pluginName)) {
                 continue
             }

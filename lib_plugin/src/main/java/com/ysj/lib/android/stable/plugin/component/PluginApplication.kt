@@ -7,6 +7,7 @@ import android.content.pm.ApplicationInfo
 import android.content.res.AssetManager
 import android.content.res.Resources
 import android.view.LayoutInflater
+import androidx.annotation.Keep
 import com.ysj.lib.android.stable.plugin.Plugin
 import com.ysj.lib.android.stable.plugin.StablePlugin
 
@@ -16,6 +17,7 @@ import com.ysj.lib.android.stable.plugin.StablePlugin
  * @author Ysj
  * Create time: 2024/9/23
  */
+@Keep
 internal open class PluginApplication : Application() {
 
     lateinit var plugin: Plugin

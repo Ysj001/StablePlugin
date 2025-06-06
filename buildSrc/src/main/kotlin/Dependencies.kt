@@ -8,11 +8,11 @@ import org.gradle.api.artifacts.dsl.DependencyHandler
  */
 
 // ================ bcu 相关 =================
-private const val BCU_VERSION = "2.1.2"
+private const val BCU_VERSION = "2.1.3"
 const val bcu_plugin = "com.github.Ysj001.BytecodeUtil:plugin:$BCU_VERSION"
 const val bcu_plugin_api = "com.github.Ysj001.BytecodeUtil:plugin-api:$BCU_VERSION"
-const val modifier_aspect = "com.github.Ysj001.bcu-modifier-aspect:modifier-aspect:1.0.0-beta2"
-const val modifier_aspect_api = "com.github.Ysj001.bcu-modifier-aspect:modifier-aspect-api:1.0.0-beta2"
+const val modifier_aspect = "com.github.Ysj001.bcu-modifier-aspect:modifier-aspect:1.0.0-beta3"
+const val modifier_aspect_api = "com.github.Ysj001.bcu-modifier-aspect:modifier-aspect-api:1.0.0-beta3"
 const val modifier_component_di = "com.github.Ysj001.bcu-modifier-component-di:modifier-component-di:1.0.2"
 const val modifier_component_di_api = "com.github.Ysj001.bcu-modifier-component-di:modifier-component-di-api:1.0.2"
 // ==========================================

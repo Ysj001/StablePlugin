@@ -292,7 +292,10 @@ object StablePlugin {
         if (!checkPluginReleased(pluginName)) {
             return null
         }
-        return runCatching { parseReleasedPlugin(pluginName) }.getOrNull()?.packageInfo
+        return runCatching {
+            val pluginFilePath = pluginName.pluginInstalledFile.absolutePath
+            application.packageManager.getPackageArchiveInfo(pluginFilePath, 0)
+        }.getOrNull()
     }
 
     /**

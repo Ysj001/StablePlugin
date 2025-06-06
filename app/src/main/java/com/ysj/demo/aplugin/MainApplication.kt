@@ -1,10 +1,14 @@
 package com.ysj.demo.aplugin
 
+import android.app.ActivityManager
 import android.app.Application
 import android.content.Context
 import android.content.res.Configuration
+import android.os.Build
+import android.os.Process
 import android.util.Log
 import androidx.collection.ArraySet
+import androidx.core.content.getSystemService
 import com.ysj.lib.android.stable.plugin.Plugin
 import com.ysj.lib.android.stable.plugin.StablePlugin
 import com.ysj.lib.android.stable.plugin.config.EventCallback
@@ -65,6 +69,17 @@ class MainApplication : Application() {
         pluginEventCallback.callOnConfigurationChanged(newConfig)
     }
 
+    private fun isMainProcess(): Boolean {
+        val processName = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            val am: ActivityManager = getSystemService()!!
+            val pid = Process.myPid()
+            am.runningAppProcesses.find { it.pid == pid }!!.processName
+        } else {
+            Process.myProcessName()
+        }
+        return applicationInfo.processName == processName
+    }
+
     private inner class PluginClassLoadHookImpl : PluginClassLoadHook {
         override fun loadFromHost(name: String): Boolean {
             return PluginApiProxy.PluginApiClassLoad.loadFromHost(name)
@@ -86,7 +101,10 @@ class MainApplication : Application() {
         override fun onPluginInstalled(plugin: Plugin) {
             Log.d(TAG, "onPluginInstalled: $plugin")
             pluginSet.add(plugin)
-            plugin.installProviders()
+            if (isMainProcess()) {
+                // ContentProvider 只能初始化一次
+                plugin.installProviders()
+            }
             if (isApplicationCreated) {
                 plugin.pluginApplication.onCreate()
             }

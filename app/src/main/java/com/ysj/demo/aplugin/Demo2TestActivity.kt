@@ -19,6 +19,10 @@ import java.util.concurrent.CancellationException
  */
 class Demo2TestActivity : AppCompatActivity() {
 
+    companion object {
+        private const val PLUGIN_NAME = "demo_plugin2"
+    }
+
     private val vb by lazy(LazyThreadSafetyMode.NONE) {
         ActivityDemo2TestBinding.inflate(layoutInflater)
     }
@@ -28,8 +32,8 @@ class Demo2TestActivity : AppCompatActivity() {
         setContentView(vb.root)
         vb.btnInstallPlugin.setOnClickListener {
             lifecycleScope.launchSafety {
-                StablePlugin.installReleasedPlugin("demo_plugin2")
-                    ?: StablePlugin.installPlugin("demo_plugin2", File(MainApplication.pluginFileStorageDir, "demo_plugin2.apk"))
+                StablePlugin.installReleasedPlugin(PLUGIN_NAME)
+                    ?: StablePlugin.installPlugin(PLUGIN_NAME, File(MainApplication.pluginFileStorageDir, "demo_plugin2.apk"))
                 Toast.makeText(this@Demo2TestActivity, "安装完成", Toast.LENGTH_SHORT).show()
             }.invokeOnCompletion {
                 if (it == null || it is CancellationException) {
@@ -40,7 +44,7 @@ class Demo2TestActivity : AppCompatActivity() {
         }
         vb.btnUninstallPlugin.setOnClickListener {
             lifecycleScope.launchSafety {
-                StablePlugin.uninstallPlugin("demo_plugin2")
+                StablePlugin.uninstallPlugin(PLUGIN_NAME)
                 Toast.makeText(this@Demo2TestActivity, "卸载完成", Toast.LENGTH_SHORT).show()
             }.invokeOnCompletion {
                 if (it == null || it is CancellationException) {
@@ -50,6 +54,9 @@ class Demo2TestActivity : AppCompatActivity() {
             }
         }
         vb.btnStartActivity.setOnClickListener {
+            if (!StablePlugin.checkPluginInstalled(PLUGIN_NAME)) {
+                return@setOnClickListener
+            }
             startActivity(Intent().setComponent(ComponentName(packageName, "com.ysj.demo.aplugin.demo2.MainActivity")))
         }
     }

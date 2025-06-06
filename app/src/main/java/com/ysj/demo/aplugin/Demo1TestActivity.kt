@@ -20,6 +20,10 @@ import java.util.concurrent.CancellationException
  */
 class Demo1TestActivity : AppCompatActivity() {
 
+    companion object {
+        private const val PLUGIN_NAME = "demo_plugin1"
+    }
+
     @ComponentInject
     private lateinit var demo1Component: Demo1Component
 
@@ -32,8 +36,8 @@ class Demo1TestActivity : AppCompatActivity() {
         setContentView(vb.root)
         vb.btnInstallPlugin.setOnClickListener {
             lifecycleScope.launchSafety {
-                StablePlugin.installReleasedPlugin("demo_plugin1")
-                    ?: StablePlugin.installPlugin("demo_plugin1", File(MainApplication.pluginFileStorageDir, "demo_plugin1.apk"))
+                StablePlugin.installReleasedPlugin(PLUGIN_NAME)
+                    ?: StablePlugin.installPlugin(PLUGIN_NAME, File(MainApplication.pluginFileStorageDir, "demo_plugin1.apk"))
                 Toast.makeText(this@Demo1TestActivity, "安装完成", Toast.LENGTH_SHORT).show()
             }.invokeOnCompletion {
                 if (it == null || it is CancellationException) {
@@ -44,7 +48,7 @@ class Demo1TestActivity : AppCompatActivity() {
         }
         vb.btnUninstallPlugin.setOnClickListener {
             lifecycleScope.launchSafety {
-                StablePlugin.uninstallPlugin("demo_plugin1")
+                StablePlugin.uninstallPlugin(PLUGIN_NAME)
                 Toast.makeText(this@Demo1TestActivity, "卸载完成", Toast.LENGTH_SHORT).show()
             }.invokeOnCompletion {
                 if (it == null || it is CancellationException) {
@@ -54,12 +58,21 @@ class Demo1TestActivity : AppCompatActivity() {
             }
         }
         vb.btnPluginVersion.setOnClickListener {
+            if (!StablePlugin.checkPluginInstalled(PLUGIN_NAME)) {
+                return@setOnClickListener
+            }
             Toast.makeText(this, "version:${demo1Component.version()}", Toast.LENGTH_SHORT).show()
         }
         vb.btnStartActivity.setOnClickListener {
+            if (!StablePlugin.checkPluginInstalled(PLUGIN_NAME)) {
+                return@setOnClickListener
+            }
             demo1Component.startMainActivity(this)
         }
         vb.btnCallService.setOnClickListener {
+            if (!StablePlugin.checkPluginInstalled(PLUGIN_NAME)) {
+                return@setOnClickListener
+            }
             demo1Component.callService(this, Demo1ServiceData(
                 title = "来自App",
                 content = "我是来自Host的调用",

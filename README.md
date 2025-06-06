@@ -25,6 +25,8 @@
 
 #### 编译
 
+**要编译本工程请先确保使用 jdk17**
+
 在打开本项目前先在项目根目录下执行如下命令生成 gradle 插件后 sync 项目
 
 - `gradlew publishAllPublicationsToLocalRepository`

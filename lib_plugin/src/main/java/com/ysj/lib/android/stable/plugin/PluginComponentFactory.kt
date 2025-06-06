@@ -37,9 +37,13 @@ internal class PluginComponentFactory : CoreComponentFactory() {
 
     companion object {
         private const val TAG = "PluginComponentFactory"
+
+        var isInstalled = false
+            private set
     }
 
     init {
+        isInstalled = true
         Log.i(TAG, "init.")
     }
 

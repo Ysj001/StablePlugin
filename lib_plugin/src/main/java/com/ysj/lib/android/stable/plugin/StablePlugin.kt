@@ -432,6 +432,10 @@ object StablePlugin {
             - 上层在 manifest 中覆盖了插件的配的 appComponentFactory
          */
         if (Build.VERSION.SDK_INT == Build.VERSION_CODES.P) {
+            if (PluginComponentFactory.isInstalled) {
+                // 由于 P 没有 instantiateClassLoader 所以需要多判断一次
+                return
+            }
             val newAppInfo = ApplicationInfo(application.applicationInfo)
             newAppInfo.appComponentFactory = PluginComponentFactory::class.java.name
             Class::class.java.getMethod("getMethod", String::class.java, emptyArray<Class<*>>().javaClass)

@@ -24,6 +24,7 @@ import com.ysj.lib.android.stable.plugin.config.StablePluginConfig
 import com.ysj.lib.android.stable.plugin.loader.PluginClassLoader
 import com.ysj.lib.android.stable.plugin.loader.PluginHostClassLoader
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.job
@@ -158,20 +159,20 @@ object StablePlugin {
     /**
      * 释放插件并安装。
      */
-    suspend fun installPlugin(pluginName: String, pluginFile: File): Plugin {
+    suspend fun installPlugin(pluginName: String, pluginFile: File): Plugin = withContext(Dispatchers.Main.immediate) {
         val installed = installedPluginMap[pluginName]
         if (installed != null) {
-            return installed
+            return@withContext installed
         }
-        releasePlugin(pluginName, pluginFile)
-        val plugin = parseReleasedPlugin(pluginName)
-        withContext(Dispatchers.Main.immediate) {
-            installedPluginMap[pluginName] = plugin
-            pluginHostClassLoader.addPluginClassLoader(plugin.classLoader as PluginClassLoader)
-            config.eventCallback?.onPluginInstalled(plugin)
-            recordInstalledPlugins()
+        val plugin = withContext(Dispatchers.IO) {
+            releasePlugin(pluginName, pluginFile)
+            parseReleasedPlugin(pluginName)
         }
-        return plugin
+        installedPluginMap[pluginName] = plugin
+        pluginHostClassLoader.addPluginClassLoader(plugin.classLoader as PluginClassLoader)
+        config.eventCallback?.onPluginInstalled(plugin)
+        recordInstalledPlugins()
+        return@withContext plugin
     }
 
     /**
@@ -201,7 +202,7 @@ object StablePlugin {
     /**
      * 释放插件。
      */
-    suspend fun releasePlugin(pluginName: String, pluginFile: File): Unit = withContext(Dispatchers.IO) {
+    suspend fun releasePlugin(pluginName: String, pluginFile: File): Unit = coroutineScope {
         coroutineContext.job.invokeOnCompletion {
             synchronized(releaseLockSet) {
                 releaseLockSet.remove(pluginName)
@@ -261,23 +262,23 @@ object StablePlugin {
     /**
      * 安装已经释放到框架中的插件。
      */
-    @MainThread
-    fun installReleasedPlugin(pluginName: String): Plugin? {
+    suspend fun installReleasedPlugin(pluginName: String): Plugin? = withContext(Dispatchers.Main.immediate) {
         var plugin = installedPluginMap[pluginName]
         if (plugin != null) {
-            return plugin
+            return@withContext plugin
         }
         if (!checkPluginReleased(pluginName)) {
-            return null
+            return@withContext null
         }
-        plugin = runCatching { parseReleasedPlugin(pluginName) }
-            .getOrNull()
-            ?: return null
+        plugin = withContext(Dispatchers.IO) {
+            runCatching { parseReleasedPlugin(pluginName) }
+                .getOrNull()
+        } ?: return@withContext null
         installedPluginMap[pluginName] = plugin
         pluginHostClassLoader.addPluginClassLoader(plugin.classLoader as PluginClassLoader)
         config.eventCallback?.onPluginInstalled(plugin)
         recordInstalledPlugins()
-        return plugin
+        return@withContext plugin
     }
 
     /**
@@ -374,7 +375,11 @@ object StablePlugin {
             if (!checkPluginReleased(pluginName)) {
                 continue
             }
-            installReleasedPlugin(pluginName)
+            val plugin = parseReleasedPlugin(pluginName)
+            installedPluginMap[pluginName] = plugin
+            pluginHostClassLoader.addPluginClassLoader(plugin.classLoader as PluginClassLoader)
+            config.eventCallback?.onPluginInstalled(plugin)
+            recordInstalledPlugins()
             count++
         }
         return count > 0

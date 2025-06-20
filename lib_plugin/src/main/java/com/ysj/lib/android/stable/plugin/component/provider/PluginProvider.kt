@@ -248,7 +248,7 @@ internal class PluginProvider : ContentProvider() {
     private fun findContentInterface(uri: Uri, unwrapUri: Uri): Any {
         val authority = unwrapUri.authority
         val context = context ?: StablePlugin.application
-        if (authority.isNullOrEmpty() || !authority.startsWith(context.packageName)) {
+        if (authority.isNullOrEmpty()) {
             return context.contentResolver
         }
         val providerMap = uri.getQueryParameter(QUERY_KEY_PLUGIN_NAME)
